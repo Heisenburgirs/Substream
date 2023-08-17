@@ -21,7 +21,7 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 
 const { connectors } = getDefaultWallets({
   appName: 'Substream',
-  projectId: '3eb60e45586f4007d101aa0c6a16db47',
+  projectId: process.env.WALLET_CONNECT_ID || "",
   chains,
 });
 

@@ -7,7 +7,7 @@ export const authOptions = {
     DiscordProvider({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
-      authorization: "https://discord.com/api/oauth2/authorize?client_id=1141363928639746069&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2Fapi%2Fauth%2Fcallback%2Fdiscord&response_type=code&scope=identify%20guilds%20guilds.join%20guilds.members.read"
+      authorization: process.env.DISCORD_REDIRECT_URL,
     })
   ],
 
