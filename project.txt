@@ -1,0 +1,24 @@
+SuperApp Factory:
+
+- Responsible for updating/deleting/redirecting streams, taking % as a fee.
+  Minting NFT to the person who opens the stream
+  NFT is transferrable, nothing to be done on Superapp side, Collab handles it.
+  Update/delete function can be only called by person who holds the NFT.
+  Burning NFT from person who owns the NFT if they decide to update/delete streams
+
+- Create objects of subscriptions.
+  1. Server ID
+  2. IPFS Link to subscription
+  3. 
+
+- Have a feeSetter that can be updated by owner
+
+We can:
+1. Set fee
+2. Set whitelist
+3. Create Subscriptions
+4. 
+
+
+BGpmnhIUPlRTcfS1MBHaH0BOggOz2bK9
+auth0: auth0Okta124!

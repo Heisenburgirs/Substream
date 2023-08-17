@@ -1,33 +1,27 @@
 import '../styles/globals.css';
 import '@rainbow-me/rainbowkit/styles.css';
 import { getDefaultWallets, RainbowKitProvider } from '@rainbow-me/rainbowkit';
-import type { AppProps } from 'next/app';
 import { configureChains, createConfig, WagmiConfig } from 'wagmi';
 import {
-  arbitrum,
   goerli,
-  mainnet,
-  optimism,
-  polygon,
-  zora,
+  polygonMumbai,
 } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
+import { SessionProvider } from "next-auth/react"
+import { UserProviderComponent } from '../components/context/UserContext';
+import { DiscordProviderComponent } from '../components/context/DiscordContext';
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [
-    mainnet,
-    polygon,
-    optimism,
-    arbitrum,
-    zora,
+    polygonMumbai,
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [goerli] : []),
   ],
   [publicProvider()]
 );
 
 const { connectors } = getDefaultWallets({
-  appName: 'RainbowKit App',
-  projectId: 'YOUR_PROJECT_ID',
+  appName: 'Substream',
+  projectId: '3eb60e45586f4007d101aa0c6a16db47',
   chains,
 });
 
@@ -38,13 +32,20 @@ const wagmiConfig = createConfig({
   webSocketPublicClient,
 });
 
-function MyApp({ Component, pageProps }: AppProps) {
+function MyApp({Component, pageProps: { session, ...pageProps }, }: any) {
+
   return (
-    <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
-        <Component {...pageProps} />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <SessionProvider session={pageProps.session}>
+      <UserProviderComponent>
+        <DiscordProviderComponent>
+          <WagmiConfig config={wagmiConfig}>
+            <RainbowKitProvider chains={chains}>
+              <Component {...pageProps} />
+            </RainbowKitProvider>
+          </WagmiConfig>
+        </DiscordProviderComponent>
+      </UserProviderComponent>
+    </SessionProvider>
   );
 }
 
