@@ -1,0 +1,608 @@
+[
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
+			},
+			{
+				"internalType": "string[]",
+				"name": "_discordIDs",
+				"type": "string[]"
+			}
+		],
+		"name": "addToWhitelist",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "superToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "agreementClass",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "agreementData",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "ctx",
+				"type": "bytes"
+			}
+		],
+		"name": "afterAgreementCreated",
+		"outputs": [
+			{
+				"internalType": "bytes",
+				"name": "newCtx",
+				"type": "bytes"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "superToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "agreementClass",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "agreementData",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "cbdata",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "ctx",
+				"type": "bytes"
+			}
+		],
+		"name": "afterAgreementTerminated",
+		"outputs": [
+			{
+				"internalType": "bytes",
+				"name": "newCtx",
+				"type": "bytes"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "superToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "agreementClass",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "agreementData",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "cbdata",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "ctx",
+				"type": "bytes"
+			}
+		],
+		"name": "afterAgreementUpdated",
+		"outputs": [
+			{
+				"internalType": "bytes",
+				"name": "newCtx",
+				"type": "bytes"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken[]",
+				"name": "incomingFlowTokens",
+				"type": "address[]"
+			},
+			{
+				"internalType": "address[]",
+				"name": "recipients",
+				"type": "address[]"
+			},
+			{
+				"internalType": "int96[]",
+				"name": "requiredFlowRates",
+				"type": "int96[]"
+			}
+		],
+		"name": "createOrAddPaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
+			}
+		],
+		"name": "removeFromWhitelist",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperfluid",
+				"name": "host",
+				"type": "address"
+			},
+			{
+				"internalType": "contract ISuperToken",
+				"name": "acceptedToken",
+				"type": "address"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "NotAcceptedSuperToken",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "NotImplemented",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "UnauthorizedHost",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "index",
+				"type": "uint256"
+			}
+		],
+		"name": "removePaymentOption",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_fee",
+				"type": "uint256"
+			}
+		],
+		"name": "setUniversalFee",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256[]",
+				"name": "indexes",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "contract ISuperToken[]",
+				"name": "incomingFlowTokens",
+				"type": "address[]"
+			},
+			{
+				"internalType": "address[]",
+				"name": "recipients",
+				"type": "address[]"
+			},
+			{
+				"internalType": "int96[]",
+				"name": "requiredFlowRates",
+				"type": "int96[]"
+			}
+		],
+		"name": "updatePaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"name": "beforeAgreementCreated",
+		"outputs": [
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"stateMutability": "pure",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "superToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "agreementClass",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "agreementData",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"name": "beforeAgreementTerminated",
+		"outputs": [
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "superToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "agreementClass",
+				"type": "address"
+			},
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			},
+			{
+				"internalType": "bytes",
+				"name": "agreementData",
+				"type": "bytes"
+			},
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"name": "beforeAgreementUpdated",
+		"outputs": [
+			{
+				"internalType": "bytes",
+				"name": "",
+				"type": "bytes"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "CFAV1_TYPE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"name": "discordIDToAddress",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "user",
+				"type": "address"
+			}
+		],
+		"name": "getPaymentOptionsForAddress",
+		"outputs": [
+			{
+				"components": [
+					{
+						"internalType": "contract ISuperToken",
+						"name": "incomingFlowToken",
+						"type": "address"
+					},
+					{
+						"internalType": "address",
+						"name": "recipient",
+						"type": "address"
+					},
+					{
+						"internalType": "int96",
+						"name": "requiredFlowRate",
+						"type": "int96"
+					}
+				],
+				"internalType": "struct Substream.PaymentOption[]",
+				"name": "",
+				"type": "tuple[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "HOST",
+		"outputs": [
+			{
+				"internalType": "contract ISuperfluid",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "isAcceptedSuperToken",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "paymentOptions",
+		"outputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "incomingFlowToken",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "int96",
+				"name": "requiredFlowRate",
+				"type": "int96"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "universalFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "whitelist",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "wallet",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+]

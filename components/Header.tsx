@@ -7,24 +7,16 @@ import { useSession, signIn, signOut } from "next-auth/react"
 
 import { useUserContext } from "./context/UserContext";
 import { useDiscordContext } from "./context/DiscordContext";
+import { Whitelist } from "./Whitelist";
+import { ethers } from "ethers";
+import ABI from '../constants/abi.json'
+import { SUBSTREAM_CONTRACT } from "../constants/constants";
 
-// Session user info interface
-interface Session {
-  user?: {
-    name: string;
-    image: string;
-  };
-  userId?: string;
-	guilds?: {
-		id: string;
-		name: string;
-	}
-}
-
-// Discord object interface
-interface Discord {
-  id: string;
-  serverName: string;
+// DiscordOwner object interface
+interface GuildType {
+    id: string;
+    serverName: string;
+    owner: boolean;
 }
 
 export const Header = () => {
@@ -32,48 +24,82 @@ export const Header = () => {
    * Wagmi hook for getting account information
    * @see https://wagmi.sh/docs/hooks/useAccount
    */	
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
 
 	// Mobile Menu
   const [menuOpen, setMenuOpen] = useState(false);
-
-	// Check if user is authenticated
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
 
 	// Access session
   const { data: session } = useSession()
 
 	// Set user & context
-  const { user, setUser } = useUserContext();
-  const { discord, setDiscord } = useDiscordContext();
+  const { user, setUser, initialized, setInitialized } = useUserContext();
+  const { discord, setDiscord, discordOwner, setDiscordOwner } = useDiscordContext();
 
+  // Check if user is initialized i.e. whitelisted on contract
+  useEffect(() => {
+    async function checkWhitelistStatus() {
+      if (isConnected) {
+        const provider = new ethers.providers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+
+        const contract = new ethers.Contract(SUBSTREAM_CONTRACT, ABI, provider);
+
+        // The isWhitelisted function from the previous answer
+        const whitelistedAddress = await contract.whitelist(address);
+        //console.log("RESPONSE WHITELIST", whitelistedAddress)
+
+        if (whitelistedAddress === "0x0000000000000000000000000000000000000000") {
+          setInitialized(false);
+        } else {
+          setInitialized(true)
+        }
+      }
+    }
+
+    checkWhitelistStatus();
+  }, [isConnected]);
+
+  // Extract all the required values from session
 	useEffect(() => {
-		if (session) {
+		const intervalId = setInterval(() => {
+			if (session) {
+				setUser({
+					name: session?.user?.name || "",
+					image: session?.user?.image || "",
+					//@ts-ignore
+					userid: session?.userId || "",
+				});
 
-			setUser({
-				name: session?.user?.name || "",
-				image: session?.user?.image || "",
-				//@ts-ignore
-				userid: session?.userId || "",
-			});
+        console.log(session)
+	
+				//@ts-ignore Get & set list of servers user's part of
+				const mappedDiscord = Array.isArray(session?.guilds) ? session.guilds.map((guild: any) => ({
+					id: guild.id,
+					serverName: guild.name,
+					owner: guild.owner,
+				})) : []; 
 
-			//@ts-ignore
-			const mappedDiscord = session?.guilds.map((guild: any) => ({
-        id: guild.id,
-        serverName: guild.name,
-      }));
+				setDiscord(mappedDiscord);
 
-      setDiscord(mappedDiscord);
-		}
-	}, [setUser, setDiscord]);
-
+        // Get & Set list of servers user owns
+				const discordOwner = mappedDiscord.filter((guild: GuildType) => guild.owner);
+				setDiscordOwner(discordOwner);
+			}
+		}, 1000); // 1 seconds in milliseconds
+	
+		// Clear the interval when the component unmounts or when the effect is re-run
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [session, setUser, setDiscord]);
 
 	const test = () => {
-		console.log("session", session)
+		console.log("discord", discordOwner)
 	}
 
   return (
     <div className="w-full px-8 py-4">
+      {!initialized && <Whitelist address={address} discordServerIds={discordOwner} /> }
       <div className="w-full flex justify-between items-center">
         <div className="flex gap-2 text-base items-center font-bold shadow-md px-4 py-2 rounded-15" >
           <div>Substream</div>
@@ -86,9 +112,8 @@ export const Header = () => {
 								{/* Profile trigger */}
 								<div className="flex gap-4 items-center shadow-md px-4 py-2 rounded-15 cursor-pointer">
 										<div className="flex gap-4 items-center">
-												{/*<img src={user?.picture} alt="profile" className="w-[20px] rounded-15" />*/}
-												<div className="font-bold">{user?.name}</div>
-												{/*<div onClick={test}>test</div>*/}
+												<div className="font-bold">{user?.name ?? "user"}</div>
+												<div onClick={test}>test</div>
 										</div>
 								</div>
 								
@@ -96,7 +121,7 @@ export const Header = () => {
 								<div className="absolute left-0 w-full h-[10px] bg-transparent group-hover:block hidden"></div>
 						
 								{/* Dropdown Menu */}
-								<div className="absolute rounded-20 left-0 mt-2 w-48 bg-white border border-gray-200 divide-y divide-gray-100  shadow-lg group-hover:block hidden">
+								<div className="absolute rounded-20 left-0 mt-2 w-48 bg-white divide-y divide-gray-100  shadow-lg group-hover:block hidden">
 										<div className="p-2">
 												<a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-15 font-bold">Manage </a>
 												<a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-15 font-bold">Create </a>
@@ -146,7 +171,3 @@ export const Header = () => {
     </div>
   );
 }
-function userDiscordContext(): { discord: any; setDiscord: any; } {
-	throw new Error("Function not implemented.");
-}
-

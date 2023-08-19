@@ -3,17 +3,22 @@ import { createContext, useContext, useState, ReactNode, Dispatch, SetStateActio
 interface Discord {
   id: string;
   serverName: string;
+  owner: boolean;
 }
 
 interface UserContextType {
-  discord: Discord | null;
-  setDiscord: Dispatch<SetStateAction<Discord | null>>;
+  discord: Discord[] | null;  // Update type to array
+  setDiscord: Dispatch<SetStateAction<Discord[] | null>>;
+  discordOwner: Discord[] | null;  // Update type to array
+  setDiscordOwner: Dispatch<SetStateAction<Discord[] | null>>;
 }
 
 // Provide the default values for the context
 const defaultUserContext: UserContextType = {
   discord: null,
   setDiscord: () => {},
+  discordOwner: null,
+  setDiscordOwner: () => {},
 };
 
 export const UserProvider = createContext<UserContextType>(defaultUserContext);
@@ -27,13 +32,17 @@ interface DiscordProviderComponentProps {
 }
 
 export const DiscordProviderComponent = ({ children }: DiscordProviderComponentProps) => {
-  const [discord, setDiscord] = useState<Discord | null>(null);
+  const [discord, setDiscord] = useState<Discord[] | null>(null);
+  const [discordOwner, setDiscordOwner] = useState<Discord[] | null>(null);
+  
 
   return (
     <UserProvider.Provider
       value={{
         discord,
         setDiscord,
+        discordOwner,
+        setDiscordOwner,
       }}
     >
       {children}

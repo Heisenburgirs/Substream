@@ -20,8 +20,25 @@ module.exports = {
     },
     extend: {
       fontSize: {
+        xxsmall: '12px',
+        xsmall: '14px',
+        small: '16px',
         medium: '20px',
       },
+    },
+    colors: {
+      green: {
+        DEFAULT: '#28C76F',  // A typical clean green
+        light: '#8FF0B3',   // A lighter variant if needed
+        dark: '#18924C'     // A darker variant if needed
+      },
+      red: {
+        DEFAULT: '#EA5455',  // A typical clean red
+        light: '#FD8D8F',   // A lighter variant if needed
+        dark: '#B73235'     // A darker variant if needed
+      },
+      white: '#ffffff',
+      black: '#000000'
     },
   },
   variants: {},

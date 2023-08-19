@@ -2,9 +2,11 @@ SuperApp Factory:
 
 - Responsible for updating/deleting/redirecting streams, taking % as a fee.
   Minting NFT to the person who opens the stream
-  NFT is transferrable, nothing to be done on Superapp side, Collab handles it.
   Update/delete function can be only called by person who holds the NFT.
   Burning NFT from person who owns the NFT if they decide to update/delete streams
+- Creators/owners can manage their subscription objects i.e. update, delete them. SuperApp
+  Factory will automatically update streams accordingly (deleted if they don't meet new minimum)
+- Users can subscribe to different creators/owners
 
 - Create objects of subscriptions.
   1. Server ID
@@ -16,9 +18,24 @@ SuperApp Factory:
 We can:
 1. Set fee
 2. Set whitelist
-3. Create Subscriptions
-4. 
+3. Create Subscription objects
+4. Redirect streams to creators
+
+Create object for each new ExistentialNFT instance created that holds
+- Receiver (deployer/creator)
+- Discord ID
+- ExistentialNFT instance
+
+18:
+- Initialize account
+- Discord server Component (for subscribers)
+- Discord server component (for owners/creators)
+- 
+
+NOTES:
+useeffect updating guilds list takes too long
 
 
 BGpmnhIUPlRTcfS1MBHaH0BOggOz2bK9
 auth0: auth0Okta124!
+
