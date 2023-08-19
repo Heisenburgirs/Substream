@@ -59,6 +59,32 @@ export const Header = () => {
     checkWhitelistStatus();
   }, [isConnected]);
 
+  const extractGuildValues = () => {
+    // Destructure guilds from session if available
+    console.log(session)
+    const { guilds } = session || {};
+
+    if (!guilds || !Array.isArray(guilds)) {
+        console.error("Guilds are not available or not an array.");
+        return;
+    }
+
+    console.log(guilds);
+
+    // 1. Array excluding features, icon, and permissions
+    const mappedDiscord = guilds.map(guild => {
+        const { features, icon, permissions, ...rest } = guild;
+        return rest;
+    });
+
+    setDiscord(mappedDiscord);
+
+    // 2. Array of guilds where OWNER is true
+    const discordOwner = guilds.filter(guild => guild.owner);
+
+    setDiscordOwner(discordOwner);
+  }
+
   // Extract all the required values from session
 	useEffect(() => {
 		const intervalId = setInterval(() => {
@@ -70,22 +96,9 @@ export const Header = () => {
 					userid: session?.userId || "",
 				});
 
-        console.log(session)
-	
-				//@ts-ignore Get & set list of servers user's part of
-				const mappedDiscord = Array.isArray(session?.guilds) ? session.guilds.map((guild: any) => ({
-					id: guild.id,
-					serverName: guild.name,
-					owner: guild.owner,
-				})) : []; 
-
-				setDiscord(mappedDiscord);
-
-        // Get & Set list of servers user owns
-				const discordOwner = mappedDiscord.filter((guild: GuildType) => guild.owner);
-				setDiscordOwner(discordOwner);
+        extractGuildValues()
 			}
-		}, 1000); // 1 seconds in milliseconds
+		}, 3000); // 1 seconds in milliseconds
 	
 		// Clear the interval when the component unmounts or when the effect is re-run
 		return () => {
@@ -94,12 +107,12 @@ export const Header = () => {
 	}, [session, setUser, setDiscord]);
 
 	const test = () => {
-		console.log("discord", discordOwner)
+		console.log("discord", session)
 	}
 
   return (
     <div className="w-full px-8 py-4">
-      {!initialized && <Whitelist address={address} discordServerIds={discordOwner} /> }
+      {session && !initialized && <Whitelist address={address} discordServerIds={discordOwner} /> }
       <div className="w-full flex justify-between items-center">
         <div className="flex gap-2 text-base items-center font-bold shadow-md px-4 py-2 rounded-15" >
           <div>Substream</div>

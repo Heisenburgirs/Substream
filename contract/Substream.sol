@@ -7,8 +7,6 @@ import { SuperTokenV1Library } from "@superfluid-finance/ethereum-contracts/cont
 import { SuperAppBaseFlow } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseFlow.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
 
-error ExistentialNFTCloneFactory_ArgumentLengthMismatch();
-
 contract Substream is Ownable, SuperAppBaseFlow {
 
     // SuperToken library setup
@@ -18,26 +16,27 @@ contract Substream is Ownable, SuperAppBaseFlow {
     ISuperToken internal immutable _acceptedToken;
 
     // Structure to represent a whitelisted entity
-    struct WhitelistInfo {
-        address wallet;
-        string discordID;
+    struct User {
+        bool isWhitelisted;
+        string[] discordServerIds; // Array of server IDs
     }
+    
+    mapping(address => User) public users;
 
     // Structure to represent a PaymentOption
     struct PaymentOption {
         ISuperToken incomingFlowToken;
         address recipient;
+        address finalRecipient;
         int96 requiredFlowRate;
+        string discordServerId;
     }
 
-    // Mapping to store address and Discord ID pairs for the whitelist
-    mapping(address => WhitelistInfo) public whitelist;
+    // Mapping to associate Discord IDs with their addresses
+    mapping(string => address) public discordIDToAddress;
 
-    // Mapping to associate addresses with their Discord IDs
-    mapping(address => string) public addressToDiscordID;
-
-    // Mapping to associate addresses with their PaymentOptions
-    mapping(address => PaymentOption[]) public paymentOptions;
+    // Mapping Discord server ID to its associated PaymentOptions
+    mapping(string => PaymentOption[]) private discordIdToPaymentOptions;
 
     // Global fee value
     uint256 public universalFee;
@@ -49,109 +48,187 @@ contract Substream is Ownable, SuperAppBaseFlow {
         _acceptedToken = acceptedToken;
     }
 
-    // Function to get all payment options for a specific address
-    function getPaymentOptionsForAddress(address user) external view returns (PaymentOption[] memory) {
-        return paymentOptions[user];
-    }
-
     // Function to set the universal fee
     function setUniversalFee(uint256 _fee) external onlyOwner {
         universalFee = _fee;
     }
-    
-    // Function to add an address to the whitelist and map it to a Discord ID
-    function addToWhitelist(address _wallet, string memory _discordID) external onlyOwner {
-        whitelist[_wallet] = WhitelistInfo(_wallet, _discordID);
-        addressToDiscordID[_wallet] = _discordID;
+
+    // Check if a user is whitelisted
+    function isWhitelisted(address _wallet) external view returns (bool) {
+        return users[_wallet].isWhitelisted;
     }
 
-    // Function to remove an address from the whitelist
-    function removeFromWhitelist(address _wallet) external onlyOwner {
-        delete whitelist[_wallet];
-        delete addressToDiscordID[_wallet];
+    // Get the Discord server IDs associated with a user
+    function getDiscordServerIds(address _wallet) external view returns (string[] memory) {
+        return users[_wallet].discordServerIds;
     }
 
-    // Function to create new PaymentOptions or add PaymentOptions for the sender
-    function createOrAddPaymentOptions(
-        ISuperToken[] memory incomingFlowTokens,
-        address[] memory recipients,
-        int96[] memory requiredFlowRates
-    ) external {
+    // Function to add address to whitelist and associate owner Discord server IDs
+    function addToWhitelist(address _wallet, string[] memory _discordIDs) external onlyOwner {
+        // Check if the address is already whitelisted
+        require(!users[_wallet].isWhitelisted, "Address is already whitelisted");
+        
+        users[_wallet].isWhitelisted = true;
+        users[_wallet].discordServerIds = _discordIDs;
 
-        // Ensure the provided index is within the valid range
-        require(
-            incomingFlowTokens.length == recipients.length &&
-            recipients.length == requiredFlowRates.length,
-            "Array length mismatch"
-        );
-
-        // Retrieve the paymentOptions array for the caller's address
-        PaymentOption[] storage userPaymentOptions = paymentOptions[msg.sender];
-
-        // Create or add the payment option(s) accordingly
-        for (uint256 i = 0; i < incomingFlowTokens.length; i++) {
-            userPaymentOptions.push(PaymentOption(
-                incomingFlowTokens[i],
-                recipients[i],
-                requiredFlowRates[i]
-            ));
+        for (uint i = 0; i < _discordIDs.length; i++) {
+            discordIDToAddress[_discordIDs[i]] = _wallet;
         }
     }
 
-    // Function to update PaymentOptions for the sender
+    // Function to update the whitelisted user's Discord server IDs
+    function updateWhitelistedUser(address _wallet, string[] memory updatedDiscordIDs) external onlyOwner {
+        require(users[_wallet].isWhitelisted, "Address is not whitelisted");
+        
+        // Use two dynamic arrays for the makeshift mapping
+        string[] memory keys = new string[](updatedDiscordIDs.length);
+        bool[] memory values = new bool[](updatedDiscordIDs.length);
+        
+        for (uint i = 0; i < updatedDiscordIDs.length; i++) {
+            keys[i] = updatedDiscordIDs[i];
+            values[i] = true;
+        }
+
+        // Iterate over the current list
+        string[] storage currentDiscordIDs = users[_wallet].discordServerIds;
+        uint currentIndex = 0;
+        while (currentIndex < currentDiscordIDs.length) {
+            bool found;
+            uint index;
+            (found, index) = findKey(keys, currentDiscordIDs[currentIndex]);
+            
+            // If the ID is no longer in the updated list, remove it
+            if (!found) {
+                delete discordIDToAddress[currentDiscordIDs[currentIndex]];
+
+                // Remove from array by swapping with the last element and then popping
+                currentDiscordIDs[currentIndex] = currentDiscordIDs[currentDiscordIDs.length - 1];
+                currentDiscordIDs.pop();
+            } else {
+                // Mark the ID as seen by setting its value to false
+                values[index] = false;
+                
+                // Move to the next element
+                currentIndex++;
+            }
+        }
+
+        // Now, add any truly new IDs from the updated list
+        for (uint i = 0; i < keys.length; i++) {
+            if (values[i]) {
+                users[_wallet].discordServerIds.push(keys[i]);
+                discordIDToAddress[keys[i]] = _wallet;
+            }
+        }
+    }
+
+    // Utility function to find a key and retrieve its index
+    function findKey(string[] memory keys, string memory key) internal pure returns (bool, uint) {
+        for (uint i = 0; i < keys.length; i++) {
+            if (keccak256(abi.encodePacked(keys[i])) == keccak256(abi.encodePacked(key))) {
+                return (true, i);
+            }
+        }
+        return (false, 0);
+    }
+
+
+
+    // Function to remove an address from the whitelist
+    function removeFromWhitelist(address _wallet) external onlyOwner {
+        require(users[_wallet].isWhitelisted, "Address is not whitelisted");
+        
+        string[] memory discordIDs = users[_wallet].discordServerIds;
+        
+        for (uint i = 0; i < discordIDs.length; i++) {
+            delete discordIDToAddress[discordIDs[i]];
+        }
+
+        delete users[_wallet];
+    }
+
+    function createOrAddPaymentOptions(
+        ISuperToken[] memory incomingFlowTokens,
+        address recipient,
+        int96[] memory requiredFlowRates,
+        string memory discordServerId,
+        address finalRecipient
+    ) external {
+        require(users[msg.sender].isWhitelisted, "User is not whitelisted");
+        require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
+        require(
+            incomingFlowTokens.length == requiredFlowRates.length,
+            "Array length mismatch for tokens and flow rates"
+        );
+
+        for (uint256 i = 0; i < incomingFlowTokens.length; i++) {
+            PaymentOption memory newPaymentOption = PaymentOption(
+                incomingFlowTokens[i],
+                recipient,
+                finalRecipient,
+                requiredFlowRates[i],
+                discordServerId
+            );
+
+            // Add to the mapping directly associating the Discord server ID with the payment option
+            discordIdToPaymentOptions[discordServerId].push(newPaymentOption);
+        }
+    }
+
+    // To fetch payment options based directly on a Discord server ID:
+    function getPaymentOptionsByDiscordId(string memory discordServerId) external view returns (PaymentOption[] memory) {
+        return discordIdToPaymentOptions[discordServerId];
+    }
+
+    // Update single or multiple paymentOptions
     function updatePaymentOptions(
+        string memory discordServerId,
         uint256[] memory indexes,
         ISuperToken[] memory incomingFlowTokens,
-        address[] memory recipients,
+        address recipient,
+        address finalRecipient,
         int96[] memory requiredFlowRates
     ) external {
-        // Retrieve the paymentOptions array for the caller's address
-        PaymentOption[] storage userPaymentOptions = paymentOptions[msg.sender];
+        require(users[msg.sender].isWhitelisted, "User is not whitelisted");
+        require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
 
-        // Ensure the caller's address has existing payment options
-        require(userPaymentOptions.length > 0, "Caller's address not found");
+        PaymentOption[] storage userPaymentOptions = discordIdToPaymentOptions[discordServerId];
 
-        // Ensure the provided index is within the valid range
+        // Check that all arrays have the same length
         require(
-            indexes.length == incomingFlowTokens.length &&
-            indexes.length == recipients.length &&
+            indexes.length == incomingFlowTokens.length && 
             indexes.length == requiredFlowRates.length,
             "Array length mismatch"
         );
 
-        // Update the payment option(s) accordingly
         for (uint256 i = 0; i < indexes.length; i++) {
-            require(indexes[i] < userPaymentOptions.length, "Invalid index");
+            require(indexes[i] < userPaymentOptions.length, "Invalid index at position: ");
             userPaymentOptions[indexes[i]] = PaymentOption(
                 incomingFlowTokens[i],
-                recipients[i],
-                requiredFlowRates[i]
+                recipient,
+                finalRecipient,
+                requiredFlowRates[i],
+                discordServerId
             );
         }
     }
 
-    // Function to remove a PaymentOption for the sender
-    function removePaymentOption(uint256 index) external {
-        // Retrieve the paymentOptions array for the caller's address
-        PaymentOption[] storage userPaymentOptions = paymentOptions[msg.sender];
+    // Remove single or multiple payment options
+    function removePaymentOptions(string memory discordServerId, uint256[] memory indices) external {
+        require(users[msg.sender].isWhitelisted, "User is not whitelisted");
+        require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
+        
+        PaymentOption[] storage userPaymentOptions = discordIdToPaymentOptions[discordServerId];
 
-        // Ensure the caller's address has existing payment options
-        require(userPaymentOptions.length > 0, "Caller's address not found");
+        // For the sake of simplicity and not dealing with sorting issues, we will remove one by one
+        for (uint256 j = 0; j < indices.length; j++) {
+            require(indices[j] < userPaymentOptions.length, "Invalid index");
+            
+            for (uint256 i = indices[j]; i < userPaymentOptions.length - 1; i++) {
+                userPaymentOptions[i] = userPaymentOptions[i + 1];
+            }
 
-        // Ensure the provided index is within the valid range
-        require(index < userPaymentOptions.length, "Invalid index");
-
-        // Remove the payment option at the specified index by shifting elements
-        for (uint256 i = index; i < userPaymentOptions.length - 1; i++) {
-            userPaymentOptions[i] = userPaymentOptions[i + 1];
-        }
-
-        // Remove the last (now duplicated) element by shortening the array length
-        userPaymentOptions.pop();
-
-        // If all payment options are removed, delete the entry from the mapping
-        if (userPaymentOptions.length == 0) {
-            delete paymentOptions[msg.sender];
+            userPaymentOptions.pop();
         }
     }
 }
