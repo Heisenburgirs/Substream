@@ -157,14 +157,24 @@
 				"type": "address[]"
 			},
 			{
-				"internalType": "address[]",
-				"name": "recipients",
-				"type": "address[]"
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
 			},
 			{
 				"internalType": "int96[]",
 				"name": "requiredFlowRates",
 				"type": "int96[]"
+			},
+			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "finalRecipient",
+				"type": "address"
 			}
 		],
 		"name": "createOrAddPaymentOptions",
@@ -238,12 +248,17 @@
 	{
 		"inputs": [
 			{
-				"internalType": "uint256",
-				"name": "index",
-				"type": "uint256"
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "indices",
+				"type": "uint256[]"
 			}
 		],
-		"name": "removePaymentOption",
+		"name": "removePaymentOptions",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -284,6 +299,11 @@
 	{
 		"inputs": [
 			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
 				"internalType": "uint256[]",
 				"name": "indexes",
 				"type": "uint256[]"
@@ -294,9 +314,14 @@
 				"type": "address[]"
 			},
 			{
-				"internalType": "address[]",
-				"name": "recipients",
-				"type": "address[]"
+				"internalType": "address",
+				"name": "recipient",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
+				"name": "finalRecipient",
+				"type": "address"
 			},
 			{
 				"internalType": "int96[]",
@@ -305,6 +330,24 @@
 			}
 		],
 		"name": "updatePaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
+			},
+			{
+				"internalType": "string[]",
+				"name": "updatedDiscordIDs",
+				"type": "string[]"
+			}
+		],
+		"name": "updateWhitelistedUser",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -462,11 +505,30 @@
 		"inputs": [
 			{
 				"internalType": "address",
-				"name": "user",
+				"name": "_wallet",
 				"type": "address"
 			}
 		],
-		"name": "getPaymentOptionsForAddress",
+		"name": "getDiscordServerIds",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			}
+		],
+		"name": "getPaymentOptionsByDiscordId",
 		"outputs": [
 			{
 				"components": [
@@ -481,9 +543,19 @@
 						"type": "address"
 					},
 					{
+						"internalType": "address",
+						"name": "finalRecipient",
+						"type": "address"
+					},
+					{
 						"internalType": "int96",
 						"name": "requiredFlowRate",
 						"type": "int96"
+					},
+					{
+						"internalType": "string",
+						"name": "discordServerId",
+						"type": "string"
 					}
 				],
 				"internalType": "struct Substream.PaymentOption[]",
@@ -527,6 +599,25 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
+			}
+		],
+		"name": "isWhitelisted",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "owner",
 		"outputs": [
@@ -534,40 +625,6 @@
 				"internalType": "address",
 				"name": "",
 				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "",
-				"type": "uint256"
-			}
-		],
-		"name": "paymentOptions",
-		"outputs": [
-			{
-				"internalType": "contract ISuperToken",
-				"name": "incomingFlowToken",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "int96",
-				"name": "requiredFlowRate",
-				"type": "int96"
 			}
 		],
 		"stateMutability": "view",
@@ -594,12 +651,12 @@
 				"type": "address"
 			}
 		],
-		"name": "whitelist",
+		"name": "users",
 		"outputs": [
 			{
-				"internalType": "address",
-				"name": "wallet",
-				"type": "address"
+				"internalType": "bool",
+				"name": "isWhitelisted",
+				"type": "bool"
 			}
 		],
 		"stateMutability": "view",

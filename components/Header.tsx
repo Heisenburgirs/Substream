@@ -11,13 +11,7 @@ import { Whitelist } from "./Whitelist";
 import { ethers } from "ethers";
 import ABI from '../constants/abi.json'
 import { SUBSTREAM_CONTRACT } from "../constants/constants";
-
-// DiscordOwner object interface
-interface GuildType {
-    id: string;
-    serverName: string;
-    owner: boolean;
-}
+import Link from 'next/link';
 
 export const Header = () => {
   /**
@@ -45,13 +39,12 @@ export const Header = () => {
         const contract = new ethers.Contract(SUBSTREAM_CONTRACT, ABI, provider);
 
         // The isWhitelisted function from the previous answer
-        const whitelistedAddress = await contract.whitelist(address);
-        //console.log("RESPONSE WHITELIST", whitelistedAddress)
+        const whitelistedAddress = await contract.isWhitelisted(address);
 
-        if (whitelistedAddress === "0x0000000000000000000000000000000000000000") {
+        if (!whitelistedAddress) {  // Checks if isWhitelisted is false
           setInitialized(false);
         } else {
-          setInitialized(true)
+          setInitialized(true);
         }
       }
     }
@@ -61,15 +54,12 @@ export const Header = () => {
 
   const extractGuildValues = () => {
     // Destructure guilds from session if available
-    console.log(session)
     const { guilds } = session || {};
 
     if (!guilds || !Array.isArray(guilds)) {
         console.error("Guilds are not available or not an array.");
         return;
     }
-
-    console.log(guilds);
 
     // 1. Array excluding features, icon, and permissions
     const mappedDiscord = guilds.map(guild => {
@@ -98,7 +88,7 @@ export const Header = () => {
 
         extractGuildValues()
 			}
-		}, 3000); // 1 seconds in milliseconds
+		}, 5000); // 10   seconds in milliseconds
 	
 		// Clear the interval when the component unmounts or when the effect is re-run
 		return () => {
@@ -107,21 +97,22 @@ export const Header = () => {
 	}, [session, setUser, setDiscord]);
 
 	const test = () => {
-		console.log("discord", session)
-	}
+    console.log(discord)
+    console.log(discordOwner)
+  }
 
   return (
-    <div className="w-full px-8 py-4">
+    <div className="w-full py-4 px-8">
       {session && !initialized && <Whitelist address={address} discordServerIds={discordOwner} /> }
       <div className="w-full flex justify-between items-center">
-        <div className="flex gap-2 text-base items-center font-bold shadow-md px-4 py-2 rounded-15" >
-          <div>Substream</div>
-        </div>
+        <Link href="/" className="flex gap-2 text-base items-center font-bold shadow-md px-4 py-2 rounded-15" >
+          Substream
+        </Link>
 
         <div className="flex gap-4">
 					{/* Discord Login & User Profile */}
           {session ? (
-							<div className="relative group">
+							<div className="relative group sm:hidden md:block">
 								{/* Profile trigger */}
 								<div className="flex gap-4 items-center shadow-md px-4 py-2 rounded-15 cursor-pointer">
 										<div className="flex gap-4 items-center">
@@ -136,8 +127,7 @@ export const Header = () => {
 								{/* Dropdown Menu */}
 								<div className="absolute rounded-20 left-0 mt-2 w-48 bg-white divide-y divide-gray-100  shadow-lg group-hover:block hidden">
 										<div className="p-2">
-												<a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-15 font-bold">Manage </a>
-												<a href="#" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-15 font-bold">Create </a>
+												<Link href="/servers" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-15 font-bold">My Servers</Link>
 												<button onClick={() => signOut()} className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-15 font-bold">
 														Log Out
 												</button>
@@ -145,7 +135,7 @@ export const Header = () => {
 								</div>
 							</div>					
             ) : (
-							<div>
+							<div className="flex sm:hidden md:block">
 									<button onClick={() => signIn()}  className="shadow-md px-4 py-2 rounded-15 cursor-pointer font-bold">Log In</button>
 							</div>
             )
@@ -172,7 +162,19 @@ export const Header = () => {
             className="fixed top-0 left-0 w-full h-full bg-white transform transition-transform duration-300 ease-in-out"
           >
             <div className="w-full h-full flex flex-col justify-between items-center py-8 px-4">
-              <a href="#" className="w-full text-center text-base block px-4 py-2 text-gray-700 bg-gray-100 rounded-15 font-bold">Activity</a>
+              <div className="flex flex-col gap-8 justify-center items-center text-medium">
+                <Link href="/servers" className="block block px-4 py-2 shadow-md rounded-15 font-bold">My Servers</Link>
+                {session ?
+                (
+                <button onClick={() => signOut()} className="block text-left px-4 py-2 shadow-md rounded-15 font-bold">
+                    Log Out
+                </button>
+                )
+                :
+                (
+									<button onClick={() => signIn()}  className="shadow-md px-4 py-2 rounded-15 cursor-pointer font-bold">Log In</button>
+                )}
+              </div>
               <div className="flex flex-col gap-8">
                 <ConnectButton />
                 <button onClick={() => setMenuOpen(!menuOpen)} className="w-full text-center text-base block px-4 py-2 text-gray-700 bg-gray-100 rounded-15 font-bold">Close</button>

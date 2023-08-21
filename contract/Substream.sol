@@ -6,6 +6,7 @@ import { ISuperfluid, ISuperToken, ISuperApp } from "@superfluid-finance/ethereu
 import { SuperTokenV1Library } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import { SuperAppBaseFlow } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseFlow.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
+import "./SubstreamNFT.sol";
 
 contract Substream is Ownable, SuperAppBaseFlow {
 
@@ -30,7 +31,9 @@ contract Substream is Ownable, SuperAppBaseFlow {
         address finalRecipient;
         int96 requiredFlowRate;
         string discordServerId;
+        string uri;
     }
+
 
     // Mapping to associate Discord IDs with their addresses
     mapping(string => address) public discordIDToAddress;
@@ -44,8 +47,12 @@ contract Substream is Ownable, SuperAppBaseFlow {
     // Reg key for testnet
     string reg = "";
 
-    constructor(ISuperfluid host, ISuperToken acceptedToken) SuperAppBaseFlow(host, true, true, true, reg) {
+    // SubstreamNFT
+    SubstreamNFT public substreamNFT;
+
+    constructor(ISuperfluid host, ISuperToken acceptedToken, SubstreamNFT _substreamNFT) SuperAppBaseFlow(host, true, true, true, reg) {
         _acceptedToken = acceptedToken;
+        substreamNFT = _substreamNFT;
     }
 
     // Function to set the universal fee
@@ -132,8 +139,6 @@ contract Substream is Ownable, SuperAppBaseFlow {
         return (false, 0);
     }
 
-
-
     // Function to remove an address from the whitelist
     function removeFromWhitelist(address _wallet) external onlyOwner {
         require(users[_wallet].isWhitelisted, "Address is not whitelisted");
@@ -152,13 +157,15 @@ contract Substream is Ownable, SuperAppBaseFlow {
         address recipient,
         int96[] memory requiredFlowRates,
         string memory discordServerId,
-        address finalRecipient
+        address finalRecipient,
+        string[] memory uris  // New argument for URIs
     ) external {
         require(users[msg.sender].isWhitelisted, "User is not whitelisted");
         require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
         require(
-            incomingFlowTokens.length == requiredFlowRates.length,
-            "Array length mismatch for tokens and flow rates"
+            incomingFlowTokens.length == requiredFlowRates.length && 
+            incomingFlowTokens.length == uris.length,  // Ensure uris array has same length
+            "Array length mismatch"
         );
 
         for (uint256 i = 0; i < incomingFlowTokens.length; i++) {
@@ -167,10 +174,10 @@ contract Substream is Ownable, SuperAppBaseFlow {
                 recipient,
                 finalRecipient,
                 requiredFlowRates[i],
-                discordServerId
+                discordServerId,
+                uris[i]  // Set the URI for this payment option
             );
 
-            // Add to the mapping directly associating the Discord server ID with the payment option
             discordIdToPaymentOptions[discordServerId].push(newPaymentOption);
         }
     }
@@ -187,8 +194,10 @@ contract Substream is Ownable, SuperAppBaseFlow {
         ISuperToken[] memory incomingFlowTokens,
         address recipient,
         address finalRecipient,
-        int96[] memory requiredFlowRates
+        int96[] memory requiredFlowRates,
+        string[] memory uris
     ) external {
+
         require(users[msg.sender].isWhitelisted, "User is not whitelisted");
         require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
 
@@ -208,7 +217,8 @@ contract Substream is Ownable, SuperAppBaseFlow {
                 recipient,
                 finalRecipient,
                 requiredFlowRates[i],
-                discordServerId
+                discordServerId,
+                uris[i]  // Update the URI for this payment option
             );
         }
     }

@@ -8,6 +8,7 @@ module.exports = {
   theme: {
     borderRadius: {
       "5": "5px",
+      "10": "10px",
       "15": "15px",
       "20": "20px"
     },
@@ -19,11 +20,15 @@ module.exports = {
       "xl": "1400px"
     },
     extend: {
+      fontFamily: {
+        'roboto': ['Roboto', 'sans']
+      },
       fontSize: {
         xxsmall: '12px',
         xsmall: '14px',
         small: '16px',
         medium: '20px',
+        large: '32px',
       },
     },
     colors: {
@@ -42,5 +47,18 @@ module.exports = {
     },
   },
   variants: {},
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      const newUtilities = {
+        '.hide-scrollbar::-webkit-scrollbar': {
+          display: 'none',
+        },
+        '.hide-scrollbar': {
+          scrollbarWidth: 'none',
+          '-ms-overflow-style': 'none',
+        },
+      };
+      addUtilities(newUtilities);
+    },
+  ],
 }

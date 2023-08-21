@@ -10,6 +10,8 @@ import { publicProvider } from 'wagmi/providers/public';
 import { SessionProvider } from "next-auth/react"
 import { UserProviderComponent } from '../components/context/UserContext';
 import { DiscordProviderComponent } from '../components/context/DiscordContext';
+import { useRouter } from 'next/router';
+import { Header } from '../components/Header';
 
 const { chains, publicClient, webSocketPublicClient } = configureChains(
   [
@@ -33,6 +35,7 @@ const wagmiConfig = createConfig({
 });
 
 function MyApp({Component, pageProps: { session, ...pageProps }, }: any) {
+  const router = useRouter();
 
   return (
     <SessionProvider session={pageProps.session}>
@@ -40,6 +43,7 @@ function MyApp({Component, pageProps: { session, ...pageProps }, }: any) {
         <DiscordProviderComponent>
           <WagmiConfig config={wagmiConfig}>
             <RainbowKitProvider chains={chains}>
+              <Header />
               <Component {...pageProps} />
             </RainbowKitProvider>
           </WagmiConfig>

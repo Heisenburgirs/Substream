@@ -2,7 +2,7 @@ import { createContext, useContext, useState, ReactNode, Dispatch, SetStateActio
 
 interface Discord {
   id: string;
-  serverName: string;
+  name: string;
   owner: boolean;
 }
 
