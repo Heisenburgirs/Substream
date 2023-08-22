@@ -13,8 +13,11 @@ contract Substream is Ownable, SuperAppBaseFlow {
     // SuperToken library setup
     using SuperTokenV1Library for ISuperToken;
 
-    // Super token that may be streamed to this contract
-    ISuperToken internal immutable _acceptedToken;
+    // Substream's address
+    address public recipient;
+
+    // List of accepted SuperTokens
+    mapping(address => bool) public acceptedTokens;
 
     // Structure to represent a whitelisted entity
     struct User {
@@ -50,9 +53,27 @@ contract Substream is Ownable, SuperAppBaseFlow {
     // SubstreamNFT
     SubstreamNFT public substreamNFT;
 
-    constructor(ISuperfluid host, ISuperToken acceptedToken, SubstreamNFT _substreamNFT) SuperAppBaseFlow(host, true, true, true, reg) {
-        _acceptedToken = acceptedToken;
+    constructor(ISuperfluid host, ISuperToken[] memory _acceptedTokens, SubstreamNFT _substreamNFT) SuperAppBaseFlow(host, true, true, true, reg) {
+        for (uint256 i = 0; i < _acceptedTokens.length; i++) {
+            acceptedTokens[address(_acceptedTokens[i])] = true;
+        }
         substreamNFT = _substreamNFT;
+        recipient = address(this);
+    }
+
+    // Override isAcceptedSuperToken
+    function isAcceptedSuperToken(ISuperToken superToken) public view override returns (bool) {
+        return acceptedTokens[address(superToken)];
+    }
+
+    // Add accepted token
+    function addAcceptedToken(ISuperToken _token) external onlyOwner {
+        acceptedTokens[address(_token)] = true;
+    }
+
+    // Remove accepted token
+    function removeAcceptedToken(ISuperToken _token) external onlyOwner {
+        acceptedTokens[address(_token)] = false;
     }
 
     // Function to set the universal fee
@@ -154,11 +175,10 @@ contract Substream is Ownable, SuperAppBaseFlow {
 
     function createOrAddPaymentOptions(
         ISuperToken[] memory incomingFlowTokens,
-        address recipient,
         int96[] memory requiredFlowRates,
         string memory discordServerId,
         address finalRecipient,
-        string[] memory uris  // New argument for URIs
+        string[] memory uris 
     ) external {
         require(users[msg.sender].isWhitelisted, "User is not whitelisted");
         require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
@@ -192,7 +212,6 @@ contract Substream is Ownable, SuperAppBaseFlow {
         string memory discordServerId,
         uint256[] memory indexes,
         ISuperToken[] memory incomingFlowTokens,
-        address recipient,
         address finalRecipient,
         int96[] memory requiredFlowRates,
         string[] memory uris
@@ -224,17 +243,17 @@ contract Substream is Ownable, SuperAppBaseFlow {
     }
 
     // Remove single or multiple payment options
-    function removePaymentOptions(string memory discordServerId, uint256[] memory indices) external {
+    function removePaymentOptions(string memory discordServerId, uint256[] memory indexes) external {
         require(users[msg.sender].isWhitelisted, "User is not whitelisted");
         require(discordIDToAddress[discordServerId] == msg.sender, "Not authorized");
         
         PaymentOption[] storage userPaymentOptions = discordIdToPaymentOptions[discordServerId];
 
         // For the sake of simplicity and not dealing with sorting issues, we will remove one by one
-        for (uint256 j = 0; j < indices.length; j++) {
-            require(indices[j] < userPaymentOptions.length, "Invalid index");
+        for (uint256 j = 0; j < indexes.length; j++) {
+            require(indexes[j] < userPaymentOptions.length, "Invalid index");
             
-            for (uint256 i = indices[j]; i < userPaymentOptions.length - 1; i++) {
+            for (uint256 i = indexes[j]; i < userPaymentOptions.length - 1; i++) {
                 userPaymentOptions[i] = userPaymentOptions[i + 1];
             }
 

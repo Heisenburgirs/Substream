@@ -44,8 +44,6 @@ export default async (req: NextApiRequest, res: NextApiResponse) => {
         return res.status(500).json({ error: `Error waiting for transaction: ${error}` });
     }
 
-    console.log("ADDED TO WHITELIST")
-
     return res.status(200).json({ success: true, transactionHash: tx.hash });
   } catch (error) {
     return res.status(500).json({ error: 'An error occurred while processing the request' });

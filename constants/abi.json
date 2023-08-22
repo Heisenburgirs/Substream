@@ -2,6 +2,19 @@
 	{
 		"inputs": [
 			{
+				"internalType": "contract ISuperToken",
+				"name": "_token",
+				"type": "address"
+			}
+		],
+		"name": "addAcceptedToken",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
 				"internalType": "address",
 				"name": "_wallet",
 				"type": "address"
@@ -157,11 +170,6 @@
 				"type": "address[]"
 			},
 			{
-				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
 				"internalType": "int96[]",
 				"name": "requiredFlowRates",
 				"type": "int96[]"
@@ -175,6 +183,11 @@
 				"internalType": "address",
 				"name": "finalRecipient",
 				"type": "address"
+			},
+			{
+				"internalType": "string[]",
+				"name": "uris",
+				"type": "string[]"
 			}
 		],
 		"name": "createOrAddPaymentOptions",
@@ -185,12 +198,12 @@
 	{
 		"inputs": [
 			{
-				"internalType": "address",
-				"name": "_wallet",
+				"internalType": "contract ISuperToken",
+				"name": "_token",
 				"type": "address"
 			}
 		],
-		"name": "removeFromWhitelist",
+		"name": "removeAcceptedToken",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -203,8 +216,13 @@
 				"type": "address"
 			},
 			{
-				"internalType": "contract ISuperToken",
-				"name": "acceptedToken",
+				"internalType": "contract ISuperToken[]",
+				"name": "_acceptedTokens",
+				"type": "address[]"
+			},
+			{
+				"internalType": "contract SubstreamNFT",
+				"name": "_substreamNFT",
 				"type": "address"
 			}
 		],
@@ -220,6 +238,24 @@
 		"inputs": [],
 		"name": "NotImplemented",
 		"type": "error"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "indexes",
+				"type": "uint256[]"
+			}
+		],
+		"name": "removePaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
 	},
 	{
 		"inputs": [],
@@ -248,17 +284,12 @@
 	{
 		"inputs": [
 			{
-				"internalType": "string",
-				"name": "discordServerId",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256[]",
-				"name": "indices",
-				"type": "uint256[]"
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
 			}
 		],
-		"name": "removePaymentOptions",
+		"name": "removeFromWhitelist",
 		"outputs": [],
 		"stateMutability": "nonpayable",
 		"type": "function"
@@ -315,11 +346,6 @@
 			},
 			{
 				"internalType": "address",
-				"name": "recipient",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
 				"name": "finalRecipient",
 				"type": "address"
 			},
@@ -327,6 +353,11 @@
 				"internalType": "int96[]",
 				"name": "requiredFlowRates",
 				"type": "int96[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "uris",
+				"type": "string[]"
 			}
 		],
 		"name": "updatePaymentOptions",
@@ -350,6 +381,25 @@
 		"name": "updateWhitelistedUser",
 		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "acceptedTokens",
+		"outputs": [
+			{
+				"internalType": "bool",
+				"name": "",
+				"type": "bool"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -556,6 +606,11 @@
 						"internalType": "string",
 						"name": "discordServerId",
 						"type": "string"
+					},
+					{
+						"internalType": "string",
+						"name": "uri",
+						"type": "string"
 					}
 				],
 				"internalType": "struct Substream.PaymentOption[]",
@@ -583,7 +638,7 @@
 		"inputs": [
 			{
 				"internalType": "contract ISuperToken",
-				"name": "",
+				"name": "superToken",
 				"type": "address"
 			}
 		],
@@ -623,6 +678,32 @@
 		"outputs": [
 			{
 				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "recipient",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "substreamNFT",
+		"outputs": [
+			{
+				"internalType": "contract SubstreamNFT",
 				"name": "",
 				"type": "address"
 			}
