@@ -1,4 +1,4 @@
-import React, { useRef, useState, ChangeEvent } from 'react';
+import React, { useRef, useState, ChangeEvent, useEffect } from 'react';
 import { create } from "ipfs-http-client";
 import superTokenList, { SuperTokenInfo } from '@superfluid-finance/tokenlist';
 import { ethers } from 'ethers'
@@ -12,18 +12,33 @@ import { SUBSTREAM_CONTRACT } from '../constants/constants'
 import { TransactionAwaitingModal } from './txModal/TransactionAwaitingModal';
 import { TransactionSuccessModal } from './txModal/TransactionSuccessModal';
 
+import { chains, tokens, flowRateDate } from '../constants/constants'
+
+import {
+  FormData,
+  hexToDecimalString,
+  calculateFlowPerSecond,
+  isValidEthereumAddress,
+  filterTokens,
+  getTokenSymbolByAddress,
+  formatAddress,
+  formatURI,
+  formatURICID,
+  clearFields,
+  removeFromList,
+  validateForm,
+  addToListAndReset,
+  createHandleFormChange
+} from '../utils/helpers'
+
+import { useIPFS } from './context/IPFSContext';
+
+import { CreateOrAddPaymentOptions } from './functions/functions';
+
 interface ModalProps {
     onClose: () => void;
     discordServerId: string;
     isOpen: boolean;
-}
-
-interface FormData {
-  incomingToken: string;
-  flowRate: string;
-  discordServerId: string;
-  finalRecipient: string;
-  uri: string;
 }
 
 declare global {
@@ -35,71 +50,16 @@ declare global {
 export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, isOpen }) => {
   if (!isOpen) return null;
 
+  const { client } = useIPFS();
+
   const [isUploading, setIsUploading] = useState(false);
   const [isAwaitVisible, setAwaitVisible] = useState(false);
   const [isSuccessVisible, setSuccessVisible] = useState(false);
 
-  // Initialize IPFS client
-  const projectId = process.env.NEXT_PUBLIC_INFURA_API;
-  const projectSecret = process.env.NEXT_PUBLIC_INFURA_SECRET;
-
-  const auth = "Basic " + Buffer.from(projectId + ":" + projectSecret).toString("base64");
-
-  const client = create({
-    host: "ipfs.infura.io",
-    port: 5001,
-    protocol: "https",
-    headers: {
-      authorization: auth,
-    },
-  });
-  
-  // This function handles the file upload, pins to IPFS and sets the URL to form
-  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files.length > 0) {
-      const file = event.target.files[0];
-      setIsUploading(true)
-      try {
-          const addedFile = await client.add(file);
-          const ipfsUrl = `https://ipfs.infura.io/ipfs/${addedFile.path}`;
-          handleFormChange('uri', ipfsUrl);
-          setIsUploading(false)
-      } catch (error) {
-          console.error("Error uploading file to IPFS:", error);
-          setIsUploading(false)
-      }
-    }
-  };
-
-  const acceptedTokens = ["fUSDCx", "fDAIx"];
-  const acceptedChain = 80001;
-
-  const filteredTokens: SuperTokenInfo[] = superTokenList.tokens.filter(token => 
-    token.extensions?.superTokenInfo && 
-    acceptedTokens.includes(token.symbol) && 
-    token.chainId === acceptedChain
-  );
-
-  const flowRateMonth = ["/month"]
-
-  const test = () => {
-    console.log(addedForms)
-  }
-
-  const calculateFlowPerSecond = () => {
-    // Convert the user-provided monthly flow rate (in Ether) to Wei.
-    const monthlyAmountInWei = ethers.utils.parseEther(addedForms[0].flowRate.toString());
-  
-    // Calculate the per-second flow rate based on the monthly amount.
-    const perSecondFlowRate = monthlyAmountInWei.div(ethers.BigNumber.from("2592000")); // 3600 * 24 * 30 = 2592000
-  
-    // Log the per-second flow rate.
-    console.log(perSecondFlowRate.toString());
-
-  };
+  const filteredTokensList = filterTokens(superTokenList.tokens, tokens, chains)
 
   const initialFormState = {
-    incomingToken: filteredTokens[0].address,
+    incomingToken: filteredTokensList[0].address,
     flowRate: '',
     discordServerId,
     finalRecipient: '',
@@ -109,27 +69,38 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
   const [form, setForm] = useState<FormData>(initialFormState);
   const [addedForms, setAddedForms] = useState<FormData[]>([]);
   const [invalidFields, setInvalidFields] = useState<(keyof FormData)[]>([]);
-
-  const handleFormChange = (field: keyof FormData, value: string) => {
-    setForm(prevState => ({
-      ...prevState,
-      [field]: value
-    }));
-    setInvalidFields(prevInvalidFields => prevInvalidFields.filter(item => item !== field));
+  
+  // This function handles the file upload, pins to IPFS and sets the URL to form
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      const file = event.target.files[0];
+      setIsUploading(true)
+      try {
+          const addedFile = await client?.add(file);
+          const ipfsUrl = `https://ipfs.infura.io/ipfs/${addedFile?.path}`;
+          handleFormChange('uri', ipfsUrl);
+          setIsUploading(false)
+      } catch (error) {
+          console.error("Error uploading file to IPFS:", error);
+          setIsUploading(false)
+      }
+    }
   };
 
+  // Handles form input field changes
+  const handleFormChange = createHandleFormChange<FormData>(setForm, setInvalidFields);
+
+  // Adds payment option to list
   const addFormToList = () => {
-    const incompleteFields: (keyof FormData)[] = Object.keys(form)
-      .filter(key => !form[key as keyof FormData])
-      .map(key => key as keyof FormData);
+    const incompleteFields = validateForm(form);
     
     if (incompleteFields.length > 0) {
-      console.log("?")
       setInvalidFields(incompleteFields);
       return;
     }
     
-    setAddedForms(prevState => [...prevState, form]);
+    const updatedForms = addToListAndReset(addedForms, form, initialFormState);
+    setAddedForms(updatedForms);
     setForm(initialFormState);
   };
 
@@ -137,110 +108,31 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
     return invalidFields.includes(field) ? 'border border-red border-opacity-80' : 'border-black border-opacity-30';
   };
 
+  // Removes payment option from list
   const removeFormFromList = (index: number) => {
-    const updatedForms = [...addedForms];
-    updatedForms.splice(index, 1);
+    const updatedForms = removeFromList(addedForms, index);
     setAddedForms(updatedForms);
   };
 
-  const formatAddress = (address: string) => {
-    if (address.length < 8) return address;  // Check to ensure address has enough characters.
-    return `${address.slice(0, 5)}...${address.slice(-5)}`;
-  };
-
-  const formatURI = (uri: string) => {
-    const lastPart = uri.split('/').pop() || ""; // Get the last part after the last '/'
-    
-    if (lastPart.length <= 8) return lastPart;
-    
-    return `${lastPart.slice(0, 5)}...${lastPart.slice(-5)}`;
-  };
-
-  const formatURICID = (uri: string) => {
-    const lastPart = uri.split('/').pop() || ""; // Get the last part after the last '/'
-    
-    return lastPart;
-  };
-
-  const clearURI = () => {
-    handleFormChange('uri', '');
-  };
-
-  const clearRecipient = () => {
-    handleFormChange('finalRecipient', '');
-  };
-
-  const clearFlow = () => {
-    handleFormChange('flowRate', '');
-  };
-
-  const clearToken = () => {
-    handleFormChange('incomingToken', '');
-  };
-
-  const isValidEthereumAddress = (address: string): boolean => {
-    return /^0x[a-fA-F0-9]{40}$/.test(address);
-  };
-
-  const getTokenSymbolByAddress = (address: string) => {
-    const token = filteredTokens.find(token => token.address === address);
-    return token ? token.symbol : address;  // Return address if token not found
-  };
-
-  const handleCreateOrAdd = async () => {
-    try {
-    // Ensure the payment option(s) is present
-    if (!addedForms || addedForms.length === 0) {
-      return { error: 'No forms have been added.' };
+  // Clears fields dynamically
+  const clearField: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const field = e.currentTarget.getAttribute("data-field") as keyof FormData;
+    if (field) {
+        clearFields([field], handleFormChange);
     }
+  };
 
-    const provider = new ethers.providers.Web3Provider(window.ethereum);
-    const signer = provider.getSigner();
-
-    const contract = new ethers.Contract(SUBSTREAM_CONTRACT, ABI, signer);
-
-    // Get gas price
-    const gasPrice = await provider.getGasPrice();
-
-    // Sort addedForms based on flowRate (ascending order)
-    addedForms.sort((a, b) => parseInt(a.flowRate) - parseInt(b.flowRate));
-
-    // Extracting respective arrays
-    const incomingFlowTokens = addedForms.map(form => form.incomingToken);
-    const requiredFlowRates = addedForms.map(form => parseInt(form.flowRate));
-    const discordServerIds = addedForms.map(form => form.discordServerId);
-    const finalRecipients = addedForms.map(form => form.finalRecipient);
-    const uris = addedForms.map(form => form.uri);
-
-    // Assuming you've an instance of your contract
-    const createPaymentOptions = await contract.createOrAddPaymentOptions(
-      incomingFlowTokens,
-      requiredFlowRates,
-      discordServerIds[0],
-      finalRecipients[0],
-      uris, 
-      { gasPrice: gasPrice }
-    );
-
-    setAwaitVisible(true);
-
-    const result = await createPaymentOptions.wait(); // Wait for the transaction to be mined
-
-    if (result && result.status === 1) {
-      setAwaitVisible(false);
-      setSuccessVisible(true);
-      return { success: "Transaction successfully mined!" };
-    } else {
-      // This is a failed transaction
-      setAwaitVisible(false);
-      return { error: 'Transaction failed.' };
-    }
-    
-    } catch (error) {
-      console.error("Error waiting for transaction:", error);
-      return ({ error: `Error waiting for transaction: ${error}` });
+  // Creates/Adds payment option(s)
+  const onSubmit = async () => {
+    const result = await CreateOrAddPaymentOptions(addedForms);
+    if (result.success) {
+        setSuccessVisible(true);
+        setAwaitVisible(false);
+    } else if (result.error) {
+        setAwaitVisible(false);
     }
   }
+
 
   return (
       <>
@@ -271,13 +163,10 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                     onChange={e => handleFormChange('incomingToken', e.target.value)}
                     className={`w-full border rounded-5 py-2 px-4 ${getInputBorderColor('incomingToken')} outline-green`}
                   >
-                    {acceptedTokens.map(acceptedTokens => (
-                      <option key={acceptedTokens} value={acceptedTokens}>{acceptedTokens}</option>
+                    {tokens.map(tokens => (
+                      <option key={tokens} value={tokens}>{tokens}</option>
                     ))}
                   </select>
-                  <div onClick={clearToken} className="cursor-pointer">
-                      <Image src={bin} width={18} height={18} alt="Clean field" />
-                  </div>
                 </div>
               </div>
               {/* Flow Rate */}
@@ -293,12 +182,12 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                   />
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-4">
-                        {flowRateMonth.map(flowRateMonth => (
-                          <option key={flowRateMonth} value={flowRateMonth}>{flowRateMonth}</option>
+                        {flowRateDate.map(flowRateDate => (
+                          <option key={flowRateDate} value={flowRateDate}>{flowRateDate}</option>
                         ))}
                     </div>
                   </div>
-                  <div onClick={clearFlow} className="cursor-pointer w-[30px] flex justify-end">
+                  <div onClick={clearField} data-field="flowRate" className="cursor-pointer w-[30px] flex justify-end">
                       <Image src={bin} width={18} height={18} alt="clean field" />
                   </div>
                 </div>
@@ -314,7 +203,7 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                     value={form.finalRecipient}
                     onChange={e => handleFormChange('finalRecipient', e.target.value)} 
                   />
-                  <div onClick={clearRecipient} className="cursor-pointer">
+                  <div onClick={clearField} data-field="finalRecipient" className="cursor-pointer">
                     <Image src={bin} width={18} height={18} alt="clean field" />
                   </div>
                 </div>
@@ -351,7 +240,7 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                             value={form.uri}
                             readOnly
                           />
-                        <div onClick={clearURI} className="cursor-pointer">
+                        <div onClick={clearField} data-field="uri" className="cursor-pointer">
                           <Image src={bin} width={18} height={18} alt="clean field" />
                         </div>
                       </div>
@@ -372,8 +261,8 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                     <div key={index} className="flex flex-col gap-2 text-small border border-black border-opacity-20 rounded-15 p-4">
                       <div className="flex justify-between">
                           <div className="text-xsmall opacity-75">Token</div>
-                          <div>{getTokenSymbolByAddress(item.incomingToken)}</div>
-                      </div>
+                          <div>{getTokenSymbolByAddress(item.incomingToken, superTokenList.tokens)}</div>
+                      </div> 
                       <div className="flex justify-between">
                           <div className="text-xsmall opacity-75">Flow Rate</div>
                           <div>{item.flowRate} / month</div>
@@ -403,7 +292,7 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
         
         <div className="flex justify-between">
           <button onClick={onClose} className="py-2 px-4 bg-red text-white rounded-10">Close</button>
-          <button onClick={handleCreateOrAdd} className="py-2 px-4 bg-green text-white rounded-10">Create</button>
+          <button onClick={onSubmit} className="py-2 px-4 bg-green text-white rounded-10">Create</button>
         </div>
         </div>
   

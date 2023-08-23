@@ -46,7 +46,7 @@ const Servers: NextPage = () => {
   return (
     <main className="flex flex-col gap-12 px-8 py-8 items-start flex-wrap rounded-15">
         <div className="grid w-full">
-					<Manage rows={tableRows} />
+					<Manage rows={tableRows} paymentOptions={paymentOptions} />
         </div>
     </main>
   );

@@ -1,28 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image'
 
 interface ModalProps {
   onClose: () => void;
   discordServerId: string;
   isOpen: boolean;
+  paymentOptions: Record<string, any[]>;
 }
 
-export const ManageModal: React.FC<ModalProps> = ({ onClose, discordServerId, isOpen }) => {
+export const ManageModal: React.FC<ModalProps> = ({ onClose, discordServerId, isOpen, paymentOptions }) => {
   if (!isOpen) return null;
+
+  const [paymentOptionsExtracted, setExtracted] = useState<any[]>([]);
+
+  useEffect(() => {
+    const currentPaymentOptions = paymentOptions[discordServerId];
+
+    // Map over currentPaymentOptions to extract values
+    const extractedOptions = currentPaymentOptions.map(option => ({
+      incomingFlowToken: option.incomingFlowToken,
+      finalRecipient: option.finalRecipient,
+      requiredFlowRate: option.requiredFlowRate?._hex,
+      uri: option.uri
+    }));
+
+    setExtracted(extractedOptions);
+  }, [discordServerId, paymentOptions]);
 
   return (
     <div className="absolute top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="w-[400px] h-[300px] bg-white shadow-md rounded-20 py-8 px-4 flex flex-col justify-center items-center gap-12">
-              <div className="flex flex-col gap-4 justify-center items-center">
-                  <div className="flex flex-col gap-8 justify-center items-center">
-                    {/*<Image src={success} width={75} height={75} alt="Account initialized" />*/}
-                    <div className="flex flex-col gap-4 justify-center items-center">
-                      <div className="font-bold text-medium">Payment Options Created 🎉!</div>
-                      <button onClick={onClose} className="max-w-[100px] py-2 px-4 bg-red text-white rounded-10">Close</button>
-                    </div>
-                  </div>
-              </div>
-          </div>
-      </div>
+      <div className="bg-white">
+          {paymentOptionsExtracted.map((option, index) => (
+            <div key={index}>
+              <p>Incoming Flow Token: {option.incomingFlowToken}</p>
+              <p>Final Recipient: {option.finalRecipient}</p>
+              <p>Required Flow Rate: {option.requiredFlowRate}</p>
+              <p>URI: {option.uri}</p>
+            </div>
+          ))}
+        </div>
+    </div>
   );
 }

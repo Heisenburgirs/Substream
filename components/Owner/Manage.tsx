@@ -12,11 +12,12 @@ interface ManageProps {
         subscription: boolean;  // Assuming subscription is a boolean
         action: string;
     }[];
+    paymentOptions: Record<string, any[]>;
 }
 
 const TABLE_HEAD = ["Name", "ID", "Subscription", "Action"];
  
-export const Manage: React.FC<ManageProps> = ({ rows }) => {
+export const Manage: React.FC<ManageProps> = ({ rows, paymentOptions }) => {
 	const [isLoading, setIsLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
@@ -32,16 +33,6 @@ export const Manage: React.FC<ManageProps> = ({ rows }) => {
       console.log("test2")
       setIsManageModalOpen(true);
     }
-  };
-
-  const handleCreateClick = (serverId: string, action: string) => {
-    setCurrentServerId(serverId);
-    setIsCreateModalOpen(true)
-  };
-
-  const handleManageClick = (serverId: string, action: string) => {
-    setCurrentServerId(serverId);
-    setIsManageModalOpen(true)
   };
 
   useEffect(() => {
@@ -89,7 +80,7 @@ export const Manage: React.FC<ManageProps> = ({ rows }) => {
                   {TABLE_HEAD.map((head) => (
                     <th
                       key={head}
-                      className="border-b border-[#d9d9d9]  bg-blue-gray-50 p-4"
+                      className="border-b border-[#d9d9d9] bg-blue-gray-50 p-4"
                     >
                       <Typography
                         variant="small"
@@ -136,7 +127,7 @@ export const Manage: React.FC<ManageProps> = ({ rows }) => {
                       <Typography
                         variant="small"
                         color="blue-gray"
-                        className="font-normal py-2 px-4 max-w-[80px] bg-white border border-black border-opacity-50 rounded-10 hover:border-green-light hover:bg-green-light hover:text-white cursor-pointer transition-all"
+                        className="font-normal py-2 text-center max-w-[82px] bg-white border border-black border-opacity-50 rounded-10 hover:border-green-light hover:bg-green-light hover:text-white cursor-pointer transition-all"
                         onClick={() => handleActionClick(row.id, row.action)}
                       >
                         {row.action}
@@ -157,6 +148,7 @@ export const Manage: React.FC<ManageProps> = ({ rows }) => {
         discordServerId={currentServerId}
         onClose={() => setIsManageModalOpen(false)}
         isOpen={isManageModalOpen}
+        paymentOptions={paymentOptions}
       />
     </div>
   );
