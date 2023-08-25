@@ -9,6 +9,15 @@ export type FormData = {
   uri: string;
 };
 
+export type UpdateFormData = {
+  discordServerId: string;
+  incomingToken: string;
+  requiredFlowRate: string;
+  finalRecipient: string;
+  uri: string;
+  index: number;
+};
+
 type SetStateAction<S> = S | ((prevState: S) => S);
 type Dispatch<A> = (value: A) => void;
 
@@ -17,16 +26,35 @@ export const hexToDecimalString = (hexValue: string): string => {
   return BigInt(hexValue).toString(10);
 }
 
-// Calculates flow per second based on tokens/monthly
-export const calculateFlowPerSecond = (addedForms: any) => {
+// Calculates flow per second based on tokens/month
+export const calculateFlowPerSecond = (flowRate: string) => {
   // Convert the user-provided monthly flow rate (in Ether) to Wei.
-  const monthlyAmountInWei = ethers.utils.parseEther(addedForms[0].flowRate.toString());
+  const monthlyAmountInWei = ethers.utils.parseEther(flowRate);
 
   // Calculate the per-second flow rate based on the monthly amount.
   const perSecondFlowRate = monthlyAmountInWei.div(ethers.BigNumber.from("2592000")); // 3600 * 24 * 30 = 2592000
 
-  // Log the per-second flow rate.
-  console.log(perSecondFlowRate.toString());
+  console.log(perSecondFlowRate)
+  return perSecondFlowRate;
+};
+
+// Calculates flow per month based on tokens/second
+export const calculateFlowPerMonth = (flowRatePerSecondInWei: string) => {
+  // Create a BigNumber instance from the input value
+  const perSecondFlowRateInWei = ethers.BigNumber.from(flowRatePerSecondInWei);
+
+  // Calculate the monthly flow rate based on the per-second amount.
+  const monthlyAmount = perSecondFlowRateInWei.mul(ethers.BigNumber.from("2592000")); // 3600 * 24 * 30 = 2592000
+
+  // Convert the monthly amount from Wei back to Ether for a more human-readable result.
+  const monthlyAmountInEther = ethers.utils.formatEther(monthlyAmount);
+
+  return monthlyAmountInEther;
+};
+
+// Rounds number
+export const roundToTwoDecimals = (num: number): number => {
+  return Math.round(num * 100) / 100;
 };
 
 // Checks if input is valid Ethereum address
@@ -47,10 +75,17 @@ export const filterTokens = (
   );
 };
 
-// Returns address based on token symbol
+// Returns token symbol based on address
 export const getTokenSymbolByAddress = (address: string, tokenList: SuperTokenInfo[]): string => {
-  const token = tokenList.find(t => t.address === address);
+  const normalizedAddress = address.toLowerCase();
+  const token = tokenList.find(t => t.address.toLowerCase() === normalizedAddress);
   return token ? token.symbol : address;  // Return address if token not found
+};
+
+// Returns address based on token symbol
+export const getTokenAddressBySymbol = (symbol: string, tokenList: SuperTokenInfo[]): string => {
+  const token = tokenList.find(t => t.symbol === symbol);
+  return token ? token.address : '';
 };
 
 // Formats address e.g. 0x0000...00000

@@ -5,6 +5,11 @@ interface IPFSContextProps {
     client: IPFS | null;
 }
 
+interface IPFSProviderProps {
+    children: ReactNode;
+    client: IPFS;
+}
+
 const IPFSContext = createContext<IPFSContextProps>({ client: null });
 
 export const useIPFS = () => {
@@ -14,11 +19,6 @@ export const useIPFS = () => {
     }
     return context;
 };
-
-interface IPFSProviderProps {
-    children: ReactNode;
-    client: IPFS;
-}
 
 export const IPFSProvider: React.FC<IPFSProviderProps> = ({ children, client }) => {
     return <IPFSContext.Provider value={{ client }}>{children}</IPFSContext.Provider>;

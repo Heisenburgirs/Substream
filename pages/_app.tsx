@@ -56,7 +56,6 @@ const client = create({
 
 function MyApp({Component, pageProps: { session, ...pageProps }, }: any) {
   const router = useRouter();
-  
 
   return (
     <SessionProvider session={pageProps.session}>

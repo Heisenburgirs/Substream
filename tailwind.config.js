@@ -32,15 +32,20 @@ module.exports = {
       },
     },
     colors: {
-      green: {
-        DEFAULT: '#28C76F',  // A typical clean green
-        light: '#8FF0B3',   // A lighter variant if needed
-        dark: '#18924C'     // A darker variant if needed
+      blue: {
+        DEFAULT: '#2876C7',  // A typical clean blue
+        light: '#8FB0F0',   // A lighter variant if needed
+        dark: '#184C92'     // A darker variant if needed
       },
       red: {
         DEFAULT: '#EA5455',  // A typical clean red
         light: '#FD8D8F',   // A lighter variant if needed
         dark: '#B73235'     // A darker variant if needed
+      },
+      green: {
+        DEFAULT: '#28C76F',  // A typical clean green
+        light: '#8FF0B3',   // A lighter variant if needed
+        dark: '#18924C'     // A darker variant if needed
       },
       white: '#ffffff',
       black: '#000000'

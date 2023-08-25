@@ -9,7 +9,7 @@ interface ManageProps {
     rows: {
         name: string;
         id: string;
-        subscription: boolean;  // Assuming subscription is a boolean
+        subscription: boolean;
         action: string;
     }[];
     paymentOptions: Record<string, any[]>;
@@ -120,7 +120,7 @@ export const Manage: React.FC<ManageProps> = ({ rows, paymentOptions }) => {
                         color="blue-gray"
                         className="font-normal"
                       >
-                        {row.subscription ? "None" : "Enabled"}
+                        {row.subscription ? "Enabled" : "None"}
                       </Typography>
                     </td>
                     <td className="p-4">

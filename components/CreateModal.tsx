@@ -1,13 +1,11 @@
 import React, { useRef, useState, ChangeEvent, useEffect } from 'react';
 import { create } from "ipfs-http-client";
-import superTokenList, { SuperTokenInfo } from '@superfluid-finance/tokenlist';
+import superTokenList from '@superfluid-finance/tokenlist';
 import { ethers } from 'ethers'
 import bin from '../public/bin.png';
 import Image from 'next/image';
 import link from '../public/link.png'
-
-import ABI from '../constants/abi.json'
-import { SUBSTREAM_CONTRACT } from '../constants/constants'
+import loading2 from '../public/loading2.gif'
 
 import { TransactionAwaitingModal } from './txModal/TransactionAwaitingModal';
 import { TransactionSuccessModal } from './txModal/TransactionSuccessModal';
@@ -34,6 +32,7 @@ import {
 import { useIPFS } from './context/IPFSContext';
 
 import { CreateOrAddPaymentOptions } from './functions/functions';
+import { useEthers } from './context/EthersContext';
 
 interface ModalProps {
     onClose: () => void;
@@ -52,9 +51,12 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
 
   const { client } = useIPFS();
 
+  const { provider, contract } = useEthers();
+
   const [isUploading, setIsUploading] = useState(false);
   const [isAwaitVisible, setAwaitVisible] = useState(false);
   const [isSuccessVisible, setSuccessVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const filteredTokensList = filterTokens(superTokenList.tokens, tokens, chains)
 
@@ -124,15 +126,28 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
 
   // Creates/Adds payment option(s)
   const onSubmit = async () => {
-    const result = await CreateOrAddPaymentOptions(addedForms);
+    setIsLoading(true)
+
+    // Adjust the flow rate for each item in addedForms
+    const adjustedForms = addedForms.map(form => {
+      const adjustedFlowRate = calculateFlowPerSecond(form.flowRate);
+      return { ...form, flowRate: adjustedFlowRate.toString() };
+    });
+
+    console.log(adjustedForms)
+
+    const result = await CreateOrAddPaymentOptions(adjustedForms, provider, contract, setAwaitVisible);
+    setAwaitVisible
+
     if (result.success) {
-        setSuccessVisible(true);
-        setAwaitVisible(false);
+      setSuccessVisible(true);
+      setAwaitVisible(false);
+      setIsLoading(false)
     } else if (result.error) {
-        setAwaitVisible(false);
+      setAwaitVisible(false);
+      setIsLoading(false)
     }
   }
-
 
   return (
       <>
@@ -286,17 +301,21 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                       <button className="flex justify-center items-center py-2 bg-red-light bg-opacity-20 font-bold text-red rounded-10" onClick={() => removeFormFromList(index)}>Remove x</button>
                     </div>
                 ))
-            )}
+              )}
+            </div>
+            </div>
+            
+            <div className="flex justify-between">
+              <button onClick={onClose} className="py-2 px-4 bg-red text-white rounded-10">Close</button>
+              <button onClick={onSubmit}
+                className={`flex gap-2 items-center py-2 px-4 bg-green ${isLoading ? "opacity-50 cursor-disabled" : "opacity-100 cursor-pointer"} text-white rounded-10`}>
+                {isLoading && <Image src={loading2} width={12} height={12} alt="Loading" />}
+                {isLoading ? "Confirm" : "Create"}
+              </button>
+            </div>
+            </div>
+      
           </div>
-        </div>
-        
-        <div className="flex justify-between">
-          <button onClick={onClose} className="py-2 px-4 bg-red text-white rounded-10">Close</button>
-          <button onClick={onSubmit} className="py-2 px-4 bg-green text-white rounded-10">Create</button>
-        </div>
-        </div>
-  
-      </div>
         </>
         )}
     </>

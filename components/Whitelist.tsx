@@ -1,11 +1,11 @@
 "use client"
 
-import { ethers } from 'ethers';
 import Image from 'next/image'
 import account from '../public/initialize.png'
 import success from '../public/success.png'
 import { useEffect, useState } from 'react';
 import { useUserContext } from './context/UserContext';
+import { handleInitializing } from './functions/functions';
 
 // Redeclare Discord Interface
 interface Discord {
@@ -36,64 +36,34 @@ export const Whitelist: React.FC<WhitelistProps> = ({ address, discordServerIds 
     }
   }, [address, discordServerIds]);
   
-  const handleInitializing = async () => {
+  const handleInitializingFunc = async () => {
     try {
-        const ethereumProvider = (window as any).ethereum;
-        if (!ethereumProvider) {
-            console.error("Ethereum provider not detected");
-            return;
-        }
 
-        // Declare provider
-        const provider = new ethers.providers.Web3Provider(ethereumProvider);
-        const signer = provider.getSigner();
+      if (!address || !discordServerIds) {
+        throw new Error("Address or server is not defined");
+      }
+      setIsLoading(true); 
 
-        // Message for signature
-        const message = "Please sign this message to confirm your identity and server ownership.";
-        const signature = await signer.signMessage(message);
-
-        console.log('Signature:', signature);
-        console.log(address)
-        console.log(discordServerIds)
-
-        // Extract server IDs from Discord object
-        const extractedServerIds = discordServerIds?.map(server => server.id);
-        console.log(extractedServerIds);
-
-        setIsLoading(true)
-
-        // Send request to API to whitelist user
-        const response = await fetch("/api/whitelist/whitelist", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ address, extractedServerIds })
-        });
-
-        const responseData = await response.json();
-
-        if (!response.ok) {
-            console.log("error", responseData.error)
-            throw new Error(responseData.error);
-        }
-
-        setIsLoading(false)
-        setIsSuccess(true)
-
-        console.log("Response from backend:", responseData);
-
+      const responseData = await handleInitializing(address, discordServerIds?.map(server => server.id));
+      
+      setIsLoading(true);
+ 
+      console.log("Response from backend:", responseData);
     } catch (error) {
+      // Handle errors
+      setIsLoading(false);
       if (error instanceof Error) {
-        if ('code' in error && error.code === 4001) { 
+        if ('code' in error && error.code === 4001) {
           setSignatureError("User canceled signature.");
         } else {
-          setSignatureError("Couldn't Obatin Signature");
+          setSignatureError("Couldn't Obtain Signature");
         }
       } else {
-          setSignatureError("An unexpected error occured")
-          console.log(new Error("An unexpected error occurred."));
+        setSignatureError("An unexpected error occurred");
       }
+    } finally {
+      setIsLoading(false);
+      setIsSuccess(true);
     }
   };
 
@@ -124,14 +94,14 @@ export const Whitelist: React.FC<WhitelistProps> = ({ address, discordServerIds 
                     </div>
                     <button 
                       disabled={!propPopulated || isLoading}
-                      onClick={handleInitializing}
+                      onClick={handleInitializingFunc}
                       className={`flex justify-center items-center border px-4 py-2 rounded-15 transition-all 
                           ${isLoading 
                               ? 'border-gray-300 cursor-not-allowed'
                               : propPopulated 
                                   ? 'border-1 hover:bg-green hover:border-green hover:text-white'
                                   : 'border-gray-300 cursor-not-allowed'}`}>
-                      {isLoading ? "Transaction Submitted" : propPopulated ? "Sign Message" : "Please Wait"}
+                      {isLoading ? "Loading..." : propPopulated ? "Sign Message" : "Please Wait"}
                     </button>
                   </div>
                 )}
