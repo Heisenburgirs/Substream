@@ -112,64 +112,63 @@ export const ManageModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
                 />
             ) : (
               <>
-              {paymentOptionsExtracted.map((option, index) => (
-                <div key={index} className="flex flex-col w-full gap-6 text-small border border-black border-opacity-20 rounded-15 p-4">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex justify-between">
-                      <span className="text-xsmall opacity-75">Token</span>
-                      <div>
-                        {getTokenSymbolByAddress(option.incomingFlowToken, filteredTokensList)}
+                {paymentOptionsExtracted.map((option, index) => (
+                  <div key={index} className="flex flex-col w-full gap-6 text-small border border-black border-opacity-20 rounded-15 p-4">
+                    <div className="flex flex-col gap-2">
+                      <div className="flex justify-between">
+                        <span className="text-xsmall opacity-75">Token</span>
+                        <div>
+                          {getTokenSymbolByAddress(option.incomingFlowToken, filteredTokensList)}
+                        </div>
+                      </div>
+                      <div className="flex justify-between"> 
+                        <span className="text-xsmall opacity-75">Recipient</span>
+                        <div>
+                          {formatAddress(option.finalRecipient)}
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xsmall opacity-75">Flow Rate</span>
+                        <div>
+                          {roundToTwoDecimals(parseFloat(calculateFlowPerMonth(hexToDecimalString(option.requiredFlowRate))))} / month
+                        </div>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-xsmall opacity-75">URI</span>
+                        <a href={`https://ipfs.io/ipfs/${formatURICID(option.uri)}`} target="_blank" className="flex gap-2 items-center">
+                          {formatURI(option.uri)}
+                          <Image src={link} width={10} height={10} className="h-[12px] mt-[2px]" alt="IPFS Link" />
+                        </a>
                       </div>
                     </div>
-                    <div className="flex justify-between"> 
-                      <span className="text-xsmall opacity-75">Recipient</span>
-                      <div>
-                        {formatAddress(option.finalRecipient)}
-                      </div>
-                    </div>
                     <div className="flex justify-between">
-                      <span className="text-xsmall opacity-75">Flow Rate</span>
-                      <div>
-                        {roundToTwoDecimals(parseFloat(calculateFlowPerMonth(hexToDecimalString(option.requiredFlowRate))))} / month
-                      </div>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-xsmall opacity-75">URI</span>
-                      <a href={`https://ipfs.io/ipfs/${formatURICID(option.uri)}`} target="_blank" className="flex gap-2 items-center">
-                        {formatURI(option.uri)}
-                        <Image src={link} width={10} height={10} className="h-[12px] mt-[2px]" alt="IPFS Link" />
-                      </a>
+                      <button
+                        className={`py-2 px-4 border border-black border-opacity-20 rounded-15 cursor-pointer hover:bg-blue hover:text-white hover:border-blue transition`}
+                        onClick={() => {
+                          setSelectedPaymentOption(option);
+                          setIsUpdatingPayment(true);
+                          handleEditOptions(index);
+                        }}
+                        disabled={isLoading[index]}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteOptions(index)}
+                        className={`flex items-center gap-2 py-2 px-4 border border-black border-opacity-20 rounded-15 cursor-pointer hover:bg-red hover:text-white hover:border-opacity-0 transition-all`}
+                        disabled={isLoading[index]}
+                      >
+                        {isLoading[index] && <Image src={loading2} width={12} height={12} alt="Loading" />}
+                        {isLoading[index] ? (isAwaitVisible ? 'Deleting' : 'Confirm') : 'Delete'}
+                      </button>
                     </div>
                   </div>
-                  <div className="flex justify-between">
-                    <button
-                      className={`py-2 px-4 border border-black border-opacity-20 rounded-15 cursor-pointer hover:bg-blue hover:text-white hover:border-blue transition`}
-                      onClick={() => {
-                        setSelectedPaymentOption(option);
-                        setIsUpdatingPayment(true);
-                        handleEditOptions(index);
-                      }}
-                      disabled={isLoading[index]}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteOptions(index)}
-                      className={`flex items-center gap-2 py-2 px-4 border border-black border-opacity-20 rounded-15 cursor-pointer hover:bg-red hover:text-white hover:border-opacity-0 transition-all`}
-                      disabled={isLoading[index]}
-                    >
-                      {isLoading[index] && <Image src={loading2} width={12} height={12} alt="Loading" />}
-                      {isLoading[index] ? (isAwaitVisible ? 'Deleting' : 'Confirm') : 'Delete'}
-                    </button>
-                  </div>
-                </div>
                 ))}
                 <div className="flex rounded-10 bg-red justify-center items-center py-2 text-white cursor-pointer" onClick={onClose}>
                   Close
                 </div>
               </>
-            )}
-      
+              )}
       </div>
     </div>
   );

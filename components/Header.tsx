@@ -10,8 +10,10 @@ import { useDiscordContext } from "./context/DiscordContext";
 import { Whitelist } from "./Whitelist";
 import { ethers } from "ethers";
 import ABI from '../constants/abi.json'
-import { SUBSTREAM_CONTRACT } from "../constants/constants";
+import { SUBSTREAM_CONTRACT, chains } from "../constants/constants";
 import Link from 'next/link';
+import { Framework } from "@superfluid-finance/sdk-core";
+import { useEthers } from "./context/EthersContext";
 
 export const Header = () => {
   /**
@@ -27,9 +29,12 @@ export const Header = () => {
   const { data: session } = useSession()
 
 	// Set user & context
-  const { user, setUser, initialized, setInitialized } = useUserContext();
+  const { user, setUser, initialized, setInitialized, framework, setFramework, superSigner, setSuperSigner } = useUserContext();
   const { discord, setDiscord, discordOwner, setDiscordOwner } = useDiscordContext();
 
+  // provider and contract instance
+  const { provider, signer, contract } = useEthers();
+  
   // Check if user is initialized i.e. whitelisted on contract
   useEffect(() => {
     async function checkWhitelistStatus() {
@@ -50,6 +55,28 @@ export const Header = () => {
     }
 
     checkWhitelistStatus();
+  }, [isConnected]);
+
+  // Create framework using SuperfluidSDK
+  useEffect(() => {
+    async function createFramework() {
+      if (isConnected && provider) {
+        const sf = await Framework.create({
+          chainId: chains, // Mumbai for now 80001
+          provider: provider
+        });
+
+        const superSigner = sf.createSigner({ signer: signer });
+
+        setFramework(sf)
+        setSuperSigner(superSigner)
+
+        //console.log(sf)
+        //console.log(superSigner)
+      }
+    }
+
+    createFramework();
   }, [isConnected]);
 
   const extractGuildValues = () => {

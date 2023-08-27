@@ -240,7 +240,6 @@ export const EditModal: React.FC<EditModalProps> = ({ onClose, isOpen, paymentOp
               {isLoading[index] ? (isAwaitVisible ? "Updating" : "Confirm") : "Update"}
             </button>
           </div>
-          <div onClick={test}>Test</div>
         </div>
       </div>
     </>

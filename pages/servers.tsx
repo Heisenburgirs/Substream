@@ -24,8 +24,7 @@ const Servers: NextPage = () => {
     if (isBlockchainOperationInProgress) return;
 
     const paymentOptionsByServer: { [key: string]: any } = {};
-    async function queryPaymentOptions() {
-      
+    async function queryPaymentOptions() { 
 
       if (discordOwner)
       for (let server of discordOwner) {
@@ -34,7 +33,7 @@ const Servers: NextPage = () => {
       }
 
       setPaymentOptions(paymentOptionsByServer);
-      console.log(paymentOptionsByServer)
+      //console.log(paymentOptionsByServer)
     }
 
     queryPaymentOptions();

@@ -48,7 +48,8 @@ module.exports = {
         dark: '#18924C'     // A darker variant if needed
       },
       white: '#ffffff',
-      black: '#000000'
+      black: '#000000',
+      grey: '#c7c7c7'
     },
   },
   variants: {},

@@ -1,3 +1,4 @@
+import { devNull } from 'os';
 import { createContext, useContext, useState, ReactNode, Dispatch, SetStateAction } from 'react';
 
 interface User {
@@ -11,6 +12,10 @@ interface UserContextType {
   setUser: Dispatch<SetStateAction<User | null>>;
   initialized: boolean;
   setInitialized: Dispatch<SetStateAction<boolean>>;
+  framework: any;
+  setFramework: Dispatch<SetStateAction<any>>;
+  superSigner: any;
+  setSuperSigner: any;
 }
 
 // Provide the default values for the context
@@ -19,6 +24,10 @@ const defaultUserContext: UserContextType = {
   setUser: () => {},
   initialized: true,
   setInitialized: () => {},
+  framework: null,
+  setFramework: () => {},
+  superSigner: null,
+  setSuperSigner: () => {}
 };
 
 export const UserProvider = createContext<UserContextType>(defaultUserContext);
@@ -34,6 +43,8 @@ interface UserProviderComponentProps {
 export const UserProviderComponent = ({ children }: UserProviderComponentProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [initialized, setInitialized] = useState<boolean>(true);
+  const [framework, setFramework] = useState<any>(null);
+  const [superSigner, setSuperSigner] = useState<any>(null);
 
   return (
     <UserProvider.Provider
@@ -41,7 +52,11 @@ export const UserProviderComponent = ({ children }: UserProviderComponentProps) 
         user,
         setUser,
         initialized,
-        setInitialized
+        setInitialized,
+        framework,
+        setFramework,
+        superSigner,
+        setSuperSigner
       }}
     >
       {children}
