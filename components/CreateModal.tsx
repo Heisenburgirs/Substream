@@ -128,10 +128,18 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
   const onSubmit = async () => {
     setIsLoading(true)
 
-    // Adjust the flow rate for each item in addedForms
+    // Adjust the flow rate and NFT uri lnik for each item in addedForms
     const adjustedForms = addedForms.map(form => {
       const adjustedFlowRate = calculateFlowPerSecond(form.flowRate);
-      return { ...form, flowRate: adjustedFlowRate.toString() };
+
+      // Replace the URI's hostname
+      const adjustedUri = form.uri.replace("https://ipfs.infura.io/ipfs/", "https://ipfs.io/ipfs/");
+
+      return { 
+        ...form, 
+        flowRate: adjustedFlowRate.toString(),
+        uri: adjustedUri // replace the old URI with the adjusted one
+      };
     });
 
     console.log(adjustedForms)
@@ -152,7 +160,7 @@ export const CreateModal: React.FC<ModalProps> = ({ onClose, discordServerId, is
   return (
       <>
         {isSuccessVisible ? (
-            <TransactionSuccessModal isSuccessVisible={isSuccessVisible} onClose={onClose} />
+            <TransactionSuccessModal isSuccessVisible={isSuccessVisible} onClose={onClose} successMsg={"Payment Options Created"} />
         ) : isAwaitVisible ? (
             <TransactionAwaitingModal isAwaitVisible={isAwaitVisible} />
         ) : (

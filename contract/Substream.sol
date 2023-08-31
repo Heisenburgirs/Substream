@@ -6,18 +6,21 @@ import { ISuperfluid, ISuperToken, ISuperApp } from "@superfluid-finance/ethereu
 import { SuperTokenV1Library } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperTokenV1Library.sol";
 import { SuperAppBaseFlow } from "@superfluid-finance/ethereum-contracts/contracts/apps/SuperAppBaseFlow.sol";
 import {ISuperToken} from "@superfluid-finance/ethereum-contracts/contracts/interfaces/superfluid/ISuperToken.sol";
+import { IConstantFlowAgreementV1 } from "@superfluid-finance/ethereum-contracts/contracts/interfaces/agreements/IConstantFlowAgreementV1.sol";
 import "./SubstreamNFT.sol";
+import "./RedirectAll.sol";
 
 contract Substream is Ownable, SuperAppBaseFlow {
 
     // SuperToken library setup
     using SuperTokenV1Library for ISuperToken;
+    ISuperToken public _token;
 
+    // Host
+    ISuperfluid private _host; // host
+ 
     // Substream's address
     address public recipient;
-
-    // List of accepted SuperTokens
-    mapping(address => bool) public acceptedTokens;
 
     // Structure to represent a whitelisted entity
     struct User {
@@ -26,6 +29,9 @@ contract Substream is Ownable, SuperAppBaseFlow {
     }
     
     mapping(address => User) public users;
+
+    // Net outflow per receiver (subscription owner)
+    mapping(address => int96) public recipientFlowRates;
 
     // Structure to represent a PaymentOption
     struct PaymentOption {
@@ -36,7 +42,6 @@ contract Substream is Ownable, SuperAppBaseFlow {
         string discordServerId;
         string uri;
     }
-
 
     // Mapping to associate Discord IDs with their addresses
     mapping(string => address) public discordIDToAddress;
@@ -50,30 +55,32 @@ contract Substream is Ownable, SuperAppBaseFlow {
     // Reg key for testnet
     string reg = "";
 
+    // Check if the method is being called with the expected token
+    modifier onlyExpectedToken(ISuperToken superToken) {
+        require(address(superToken) == address(_token), "Token not approved");
+        _;
+    }
+
+    modifier onlyHost() {
+        require(msg.sender == address(HOST), "Caller is not the host");
+        _;
+    }
+
     // SubstreamNFT
     SubstreamNFT public substreamNFT;
 
-    constructor(ISuperfluid host, ISuperToken[] memory _acceptedTokens, SubstreamNFT _substreamNFT) SuperAppBaseFlow(host, true, true, true, reg) {
-        for (uint256 i = 0; i < _acceptedTokens.length; i++) {
-            acceptedTokens[address(_acceptedTokens[i])] = true;
-        }
+    constructor(ISuperfluid host, ISuperToken token, SubstreamNFT _substreamNFT) SuperAppBaseFlow(host, true, true, true, reg) {
+
+        _host = host;
+        _token = token;
         substreamNFT = _substreamNFT;
         recipient = address(this);
     }
 
-    // Override isAcceptedSuperToken
+
+    // Override isAcceptedSuperToken to only accept the `_token`
     function isAcceptedSuperToken(ISuperToken superToken) public view override returns (bool) {
-        return acceptedTokens[address(superToken)];
-    }
-
-    // Add accepted token
-    function addAcceptedToken(ISuperToken _token) external onlyOwner {
-        acceptedTokens[address(_token)] = true;
-    }
-
-    // Remove accepted token
-    function removeAcceptedToken(ISuperToken _token) external onlyOwner {
-        acceptedTokens[address(_token)] = false;
+        return address(superToken) == address(_token);
     }
 
     // Function to set the universal fee
@@ -203,7 +210,7 @@ contract Substream is Ownable, SuperAppBaseFlow {
     }
 
     // To fetch payment options based directly on a Discord server ID:
-    function getPaymentOptionsByDiscordId(string memory discordServerId) external view returns (PaymentOption[] memory) {
+    function getPaymentOptionsByDiscordId(string memory discordServerId) public view returns (PaymentOption[] memory) {
         return discordIdToPaymentOptions[discordServerId];
     }
 
@@ -259,5 +266,88 @@ contract Substream is Ownable, SuperAppBaseFlow {
 
             userPaymentOptions.pop();
         }
+    }
+
+    function mintNFT(address to, string memory uri, string memory serverId) public {
+        substreamNFT.mint(to, uri, serverId);
+    }
+
+    function burnNFT(address to, string memory serverId) public {
+        substreamNFT.burnByServerId(to, serverId);
+    }
+  
+    function _updateOutflow(address sender, bytes calldata ctx) private returns (bytes memory newCtx) {
+        newCtx = ctx;
+
+        // Decode the entire context to obtain the userData
+        ISuperfluid.Context memory decompiledContext = _host.decodeCtx(ctx);
+
+        // Decode the userData from the decompiled context
+        (address finalRecipient, string memory discordId, int96 flowRate, string memory uri) = 
+            abi.decode(decompiledContext.userData, (address, string, int96, string));
+
+        int96 currentAggregateFlowRateToRecipient = _token.getFlowRate(address(this), finalRecipient);
+
+        if (flowRate == 0) { // User wants to delete their stream
+            burnNFT(sender, discordId); // Burn the NFT
+            int96 currentFlowRateFromSender = _token.getFlowRate(sender, address(this));
+            int96 newAggregateFlowRate = currentAggregateFlowRateToRecipient - currentFlowRateFromSender;
+            if (newAggregateFlowRate == 0) {
+                newCtx = _token.deleteFlowWithCtx(address(this), finalRecipient, ctx);
+            } else {
+                newCtx = _token.updateFlowWithCtx(finalRecipient, newAggregateFlowRate, ctx);
+            }
+        } else { // User wants to start a stream
+            int96 newAggregateFlowRate = currentAggregateFlowRateToRecipient + flowRate;
+            if (currentAggregateFlowRateToRecipient == 0) {
+                newCtx = _token.createFlowWithCtx(finalRecipient, flowRate, ctx);
+            } else {
+                newCtx = _token.updateFlowWithCtx(finalRecipient, newAggregateFlowRate, ctx);
+            }
+            mintNFT(sender, uri, discordId); // Mint a new NFT
+        }
+        return newCtx;
+    }
+
+    
+    function onFlowCreated(
+        ISuperToken /*superToken*/,
+        address sender,
+        bytes calldata ctx
+    )
+        internal
+        override
+        returns (bytes memory)
+    {
+        return _updateOutflow(sender, ctx);
+    }
+
+    function onFlowUpdated(
+        ISuperToken /*superToken*/,
+        address sender,
+        int96 /*previousFlowRate*/,
+        uint256 /*lastUpdated*/,
+        bytes calldata ctx
+    )
+        internal
+        override
+        returns (bytes memory)
+    {
+        return _updateOutflow(sender, ctx);
+    }
+
+    function onFlowDeleted(
+        ISuperToken /*superToken*/,
+        address sender,
+        address /*receiver*/,
+        int96 /*previousFlowRate*/,
+        uint256 /*lastUpdated*/,
+        bytes calldata ctx
+    ) 
+        internal
+        override
+        returns (bytes memory newCtx) 
+    {
+        return _updateOutflow(sender, ctx);
     }
 }

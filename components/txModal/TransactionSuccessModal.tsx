@@ -5,9 +5,10 @@ import success from '../../public/success.png'
 interface TransactionSuccessModalProps {
   isSuccessVisible: boolean;
   onClose: () => void;
+  successMsg: string;
   }
 
-export const TransactionSuccessModal: React.FC<TransactionSuccessModalProps> = ({ isSuccessVisible, onClose }) => {
+export const TransactionSuccessModal: React.FC<TransactionSuccessModalProps> = ({ isSuccessVisible, onClose, successMsg }) => {
   if (!isSuccessVisible) {
     return null;
   }
@@ -19,7 +20,7 @@ export const TransactionSuccessModal: React.FC<TransactionSuccessModalProps> = (
                   <div className="flex flex-col gap-8 justify-center items-center">
                     <Image src={success} width={75} height={75} alt="Account initialized" />
                     <div className="flex flex-col gap-4 justify-center items-center">
-                      <div className="font-bold text-medium">Payment Options Created 🎉!</div>
+                      <div className="font-bold text-medium">{successMsg} 🎉!</div>
                       <button onClick={onClose} className="max-w-[100px] py-2 px-4 bg-red text-white rounded-10">Close</button>
                     </div>
                   </div>

@@ -29,7 +29,8 @@ export const Whitelist: React.FC<WhitelistProps> = ({ address, discordServerIds 
 
   // Check for prop values if they're populated, update state accordingly
   useEffect(() => {
-    if (address && Array.isArray(discordServerIds) && discordServerIds.length > 0) {
+    if (discordServerIds)
+    if (address && discordServerIds.length > 0) {
         setPropPopulated(true);
     } else {
         setPropPopulated(false);

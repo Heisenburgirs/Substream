@@ -54,30 +54,38 @@ export const Header = () => {
       }
     }
 
-    checkWhitelistStatus();
+    checkWhitelistStatus(); 
   }, [isConnected]);
 
   // Create framework using SuperfluidSDK
   useEffect(() => {
     async function createFramework() {
-      if (isConnected && provider) {
-        const sf = await Framework.create({
-          chainId: chains, // Mumbai for now 80001
-          provider: provider
-        });
+        if (isConnected && provider) {
+            const sf = await Framework.create({
+                chainId: chains, // Mumbai for now 80001
+                provider: provider
+            });
 
-        const superSigner = sf.createSigner({ signer: signer });
+            const superSigner = sf.createSigner({ signer: signer });
 
-        setFramework(sf)
-        setSuperSigner(superSigner)
+            setFramework(sf);
+            setSuperSigner(superSigner);
 
-        //console.log(sf)
-        //console.log(superSigner)
-      }
+            console.log(sf);
+            console.log(superSigner);
+        }
     }
 
+    // Call createFramework immediately upon mounting
     createFramework();
-  }, [isConnected]);
+
+    // Set the interval to call createFramework every 1 minute
+    const intervalId = setInterval(createFramework, 60000);
+
+    // Clear the interval when the component is unmounted
+    return () => clearInterval(intervalId);
+
+  }, [isConnected, provider]);
 
   const extractGuildValues = () => {
     // Destructure guilds from session if available
@@ -115,7 +123,7 @@ export const Header = () => {
 
         extractGuildValues()
 			}
-		}, 5000); // 10   seconds in milliseconds
+		}, 4000); // 10   seconds in milliseconds
 	
 		// Clear the interval when the component unmounts or when the effect is re-run
 		return () => {
@@ -144,7 +152,7 @@ export const Header = () => {
 								<div className="flex gap-4 items-center shadow-md px-4 py-2 rounded-15 cursor-pointer">
 										<div className="flex gap-4 items-center">
 												<div className="font-bold">{user?.name ?? "user"}</div>
-												<div onClick={test}>test</div>
+												{/*<div onClick={test}>test</div>*/}
 										</div>
 								</div>
 								

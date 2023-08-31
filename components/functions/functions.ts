@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 import { useEthers } from '../context/EthersContext';
 import { FormData, UpdateFormData } from '../../utils/helpers'
+import { Wallet } from 'ethers';
 
 export const handleInitializing = async (address: string, discordServerIds: string[]): Promise<any> => {
   try {
@@ -217,4 +218,127 @@ export const deletePaymentOptions = async (
     console.error("Error removing payment options:", error);
     return ({ error: `Error removing payment options: ${error}` });
   }
+}
+
+export const createFlow = async (
+  tokenAddress: any,
+  uri: string,
+  receiver: string,
+  flowRate: string,
+  context: {finalRecipient: string, discordId: string, bool: boolean},
+  framework: any,
+  superSigner: any,
+  provider: any,
+  onFlowCreationStatus: (status: 'loading' | 'success' | 'error') => void
+  ): Promise<boolean> => {
+    try {
+        onFlowCreationStatus('loading');
+
+        // Encode context to bytes
+        const encoder = new ethers.utils.AbiCoder();
+        const userData = encoder.encode(
+          ["address", "string", "int96", "string", "bool"], 
+          [context.finalRecipient, context.discordId, flowRate, uri, context.bool]
+        );
+        console.log(userData)
+
+        const gasPrice = await provider?.getGasPrice();
+        console.log(gasPrice)
+
+        console.log(framework)
+        console.log(tokenAddress)
+        console.log(receiver)
+        console.log("FLOW RATE", flowRate)
+        console.log(context.finalRecipient)
+        console.log(context.discordId)
+        const decodedData = encoder.decode(["address", "string", "int96", "string", "bool"], userData);
+        console.log(decodedData);
+
+        const token = await framework.loadSuperToken(tokenAddress);
+
+        const createFlowOperation = token.createFlow({
+            sender: await superSigner.getAddress(),
+            receiver: receiver,
+            flowRate: flowRate,
+            userData: userData
+        });
+
+        console.log(createFlowOperation); 
+        console.log("Creating your stream...");
+
+        const result = await createFlowOperation.exec(superSigner);
+
+        console.log(result);
+          
+        onFlowCreationStatus('success');
+        return true;
+    } catch (error) {
+        onFlowCreationStatus('error');
+        console.log(
+            "Hmmm, your transaction threw an error  . Make sure that this stream does not already exist, and that you've entered a valid Ethereum address!"
+        );
+        console.error(error);
+        return false;
+    }
+}
+
+export const deleteFlow = async (
+  tokenAddress: any,
+  uri: string,
+  receiver: string,
+  flowRate: string,
+  context: {finalRecipient: string | undefined, discordId: string, bool: boolean},
+  framework: any,
+  superSigner: any,
+  provider: any,
+  onFlowCreationStatus: (status: 'loading' | 'success' | 'error') => void
+  ): Promise<boolean> => {
+    try {
+        onFlowCreationStatus('loading');
+
+        // Encode context to bytes
+        const encoder = new ethers.utils.AbiCoder();
+        const userData = encoder.encode(
+          ["address", "string", "int96", "string", "bool"], 
+          [context.finalRecipient, context.discordId, flowRate, uri, context.bool]
+        );
+        console.log(userData)
+
+        const gasPrice = await provider?.getGasPrice();
+        console.log(gasPrice)
+
+        console.log(framework)
+        console.log(tokenAddress)
+        console.log(receiver)
+        console.log("FLOW RATE", flowRate)
+        console.log(context.finalRecipient)
+        console.log(context.discordId)
+        const decodedData = encoder.decode(["address", "string", "int96", "string", "bool"], userData);
+        console.log(decodedData);
+
+        const token = await framework.loadSuperToken(tokenAddress);
+
+        const createFlowOperation = token.deleteFlow({
+            sender: await superSigner.getAddress(),
+            receiver: receiver,
+            userData: userData
+        });
+
+        console.log(createFlowOperation); 
+        console.log("Creating your stream...");
+
+        const result = await createFlowOperation.exec(superSigner);
+
+        console.log(result);
+
+        onFlowCreationStatus('success');
+        return true;
+    } catch (error) {
+        onFlowCreationStatus('error');
+        console.log(
+            "Hmmm, your transaction threw an error  . Make sure that this stream does not already exist, and that you've entered a valid Ethereum address!"
+        );
+        console.error(error);
+        return false;
+    }
 }

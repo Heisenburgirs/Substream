@@ -12,7 +12,7 @@ interface Discord {
   id: string;
   name: string;
   owner: boolean;
-}
+} 
 
 const Home: NextPage = () => {
   const { discord, discordOwner } = useDiscordContext();
@@ -35,6 +35,7 @@ const Home: NextPage = () => {
 
       setPaymentOptions(optionsByServer);
     };
+    console.log("index")
 
     fetchPaymentOptions();
   }, [discord]);

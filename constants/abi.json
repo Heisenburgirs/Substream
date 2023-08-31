@@ -2,14 +2,95 @@
 	{
 		"inputs": [
 			{
+				"internalType": "contract ISuperfluid",
+				"name": "host",
+				"type": "address"
+			},
+			{
 				"internalType": "contract ISuperToken",
-				"name": "_token",
+				"name": "token",
+				"type": "address"
+			},
+			{
+				"internalType": "contract SubstreamNFT",
+				"name": "_substreamNFT",
 				"type": "address"
 			}
 		],
-		"name": "addAcceptedToken",
-		"outputs": [],
 		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"inputs": [],
+		"name": "NotAcceptedSuperToken",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "NotImplemented",
+		"type": "error"
+	},
+	{
+		"inputs": [],
+		"name": "UnauthorizedHost",
+		"type": "error"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "previousOwner",
+				"type": "address"
+			},
+			{
+				"indexed": true,
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "CFAV1_TYPE",
+		"outputs": [
+			{
+				"internalType": "bytes32",
+				"name": "",
+				"type": "bytes32"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "HOST",
+		"outputs": [
+			{
+				"internalType": "contract ISuperfluid",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "_token",
+		"outputs": [
+			{
+				"internalType": "contract ISuperToken",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
@@ -165,246 +246,6 @@
 	{
 		"inputs": [
 			{
-				"internalType": "contract ISuperToken[]",
-				"name": "incomingFlowTokens",
-				"type": "address[]"
-			},
-			{
-				"internalType": "int96[]",
-				"name": "requiredFlowRates",
-				"type": "int96[]"
-			},
-			{
-				"internalType": "string",
-				"name": "discordServerId",
-				"type": "string"
-			},
-			{
-				"internalType": "address",
-				"name": "finalRecipient",
-				"type": "address"
-			},
-			{
-				"internalType": "string[]",
-				"name": "uris",
-				"type": "string[]"
-			}
-		],
-		"name": "createOrAddPaymentOptions",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "contract ISuperToken",
-				"name": "_token",
-				"type": "address"
-			}
-		],
-		"name": "removeAcceptedToken",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "contract ISuperfluid",
-				"name": "host",
-				"type": "address"
-			},
-			{
-				"internalType": "contract ISuperToken[]",
-				"name": "_acceptedTokens",
-				"type": "address[]"
-			},
-			{
-				"internalType": "contract SubstreamNFT",
-				"name": "_substreamNFT",
-				"type": "address"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "constructor"
-	},
-	{
-		"inputs": [],
-		"name": "NotAcceptedSuperToken",
-		"type": "error"
-	},
-	{
-		"inputs": [],
-		"name": "NotImplemented",
-		"type": "error"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "discordServerId",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256[]",
-				"name": "indexes",
-				"type": "uint256[]"
-			}
-		],
-		"name": "removePaymentOptions",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "UnauthorizedHost",
-		"type": "error"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "previousOwner",
-				"type": "address"
-			},
-			{
-				"indexed": true,
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "OwnershipTransferred",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_wallet",
-				"type": "address"
-			}
-		],
-		"name": "removeFromWhitelist",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [],
-		"name": "renounceOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			}
-		],
-		"name": "setUniversalFee",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "newOwner",
-				"type": "address"
-			}
-		],
-		"name": "transferOwnership",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "string",
-				"name": "discordServerId",
-				"type": "string"
-			},
-			{
-				"internalType": "uint256[]",
-				"name": "indexes",
-				"type": "uint256[]"
-			},
-			{
-				"internalType": "contract ISuperToken[]",
-				"name": "incomingFlowTokens",
-				"type": "address[]"
-			},
-			{
-				"internalType": "address",
-				"name": "finalRecipient",
-				"type": "address"
-			},
-			{
-				"internalType": "int96[]",
-				"name": "requiredFlowRates",
-				"type": "int96[]"
-			},
-			{
-				"internalType": "string[]",
-				"name": "uris",
-				"type": "string[]"
-			}
-		],
-		"name": "updatePaymentOptions",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_wallet",
-				"type": "address"
-			},
-			{
-				"internalType": "string[]",
-				"name": "updatedDiscordIDs",
-				"type": "string[]"
-			}
-		],
-		"name": "updateWhitelistedUser",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"name": "acceptedTokens",
-		"outputs": [
-			{
-				"internalType": "bool",
-				"name": "",
-				"type": "bool"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
 				"internalType": "contract ISuperToken",
 				"name": "",
 				"type": "address"
@@ -520,16 +361,54 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "CFAV1_TYPE",
-		"outputs": [
+		"inputs": [
 			{
-				"internalType": "bytes32",
-				"name": "",
-				"type": "bytes32"
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "serverId",
+				"type": "string"
 			}
 		],
-		"stateMutability": "view",
+		"name": "burnNFT",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "contract ISuperToken[]",
+				"name": "incomingFlowTokens",
+				"type": "address[]"
+			},
+			{
+				"internalType": "int96[]",
+				"name": "requiredFlowRates",
+				"type": "int96[]"
+			},
+			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
+				"internalType": "address",
+				"name": "finalRecipient",
+				"type": "address"
+			},
+			{
+				"internalType": "string[]",
+				"name": "uris",
+				"type": "string[]"
+			}
+		],
+		"name": "createOrAddPaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{
@@ -622,19 +501,6 @@
 		"type": "function"
 	},
 	{
-		"inputs": [],
-		"name": "HOST",
-		"outputs": [
-			{
-				"internalType": "contract ISuperfluid",
-				"name": "",
-				"type": "address"
-			}
-		],
-		"stateMutability": "view",
-		"type": "function"
-	},
-	{
 		"inputs": [
 			{
 				"internalType": "contract ISuperToken",
@@ -673,6 +539,29 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "to",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "uri",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "serverId",
+				"type": "string"
+			}
+		],
+		"name": "mintNFT",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "owner",
 		"outputs": [
@@ -699,6 +588,76 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"name": "recipientFlowRates",
+		"outputs": [
+			{
+				"internalType": "int96",
+				"name": "",
+				"type": "int96"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
+			}
+		],
+		"name": "removeFromWhitelist",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "indexes",
+				"type": "uint256[]"
+			}
+		],
+		"name": "removePaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_fee",
+				"type": "uint256"
+			}
+		],
+		"name": "setUniversalFee",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "substreamNFT",
 		"outputs": [
@@ -712,6 +671,19 @@
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "newOwner",
+				"type": "address"
+			}
+		],
+		"name": "transferOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "universalFee",
 		"outputs": [
@@ -722,6 +694,62 @@
 			}
 		],
 		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "discordServerId",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "indexes",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "contract ISuperToken[]",
+				"name": "incomingFlowTokens",
+				"type": "address[]"
+			},
+			{
+				"internalType": "address",
+				"name": "finalRecipient",
+				"type": "address"
+			},
+			{
+				"internalType": "int96[]",
+				"name": "requiredFlowRates",
+				"type": "int96[]"
+			},
+			{
+				"internalType": "string[]",
+				"name": "uris",
+				"type": "string[]"
+			}
+		],
+		"name": "updatePaymentOptions",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_wallet",
+				"type": "address"
+			},
+			{
+				"internalType": "string[]",
+				"name": "updatedDiscordIDs",
+				"type": "string[]"
+			}
+		],
+		"name": "updateWhitelistedUser",
+		"outputs": [],
+		"stateMutability": "nonpayable",
 		"type": "function"
 	},
 	{

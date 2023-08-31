@@ -18,30 +18,51 @@ contract SubstreamNFT is ERC721, Ownable {
 
     using SuperTokenV1Library for ISuperToken;
 
+    // tokenURI to tokenID mapping
     mapping(uint256 => string) private _tokenURIs;
 
     // Map tokenIDs to its owner to retrieve all tokendIDs given address owns
     mapping(address => uint256[]) private _ownedTokens;
 
+    // Superapp address
     address public superApp;
 
+    // TokenID Count
     uint256 private currentTokenId;
 
+    // Only SuperApp
     modifier onlySuperApp() {
         require(msg.sender == superApp, "Not authorized");
         _;
     }
 
+    // Server Address to tokenID
+    mapping(uint256 => string) private _tokenServerIDs;
+
     // Set NFT Name  
     constructor() ERC721("Substream", "SUBS") {} 
 
-    function mint(address recipient, string memory tokenURIValue) external onlySuperApp {
+    // Mint NFT, map server ID to tokenID
+    function mint(address recipient, string memory tokenURIValue, string memory serverID) external onlySuperApp {
+        require(recipient != address(0), "SubstreamNFT: mint to the zero address");
+
         _mint(recipient, currentTokenId);
         _tokenURIs[currentTokenId] = tokenURIValue;
+        _tokenServerIDs[currentTokenId] = serverID;
 
         _ownedTokens[recipient].push(currentTokenId);  // Add the tokenId to the recipient's tokens
 
         currentTokenId++; 
+    }
+
+    function getTokenIdByServerId(address owner, string memory serverID) internal view returns (uint256) {
+        uint256[] memory ownedTokens = _ownedTokens[owner];
+        for (uint256 i = 0; i < ownedTokens.length; i++) {
+            if (keccak256(abi.encodePacked(_tokenServerIDs[ownedTokens[i]])) == keccak256(abi.encodePacked(serverID))) {
+                return ownedTokens[i];
+            }
+        }
+        revert("SubstreamNFT: No token found for the given serverID");
     }
 
     // Function to set the superApp, only callable by the owner of the contract
@@ -49,7 +70,7 @@ contract SubstreamNFT is ERC721, Ownable {
         superApp = _superApp;
     }
 
-    function burn(uint256 tokenId) external onlySuperApp {
+    function burn(uint256 tokenId) internal onlySuperApp {
         require(ownerOf(tokenId) != address(0), "Token does not exist");
         
         address owner = ownerOf(tokenId);
@@ -57,6 +78,12 @@ contract SubstreamNFT is ERC721, Ownable {
         
         delete _tokenURIs[tokenId]; 
         _burn(tokenId);
+    }
+
+    
+    function burnByServerId(address owner, string memory serverID) external onlySuperApp {
+        uint256 tokenId = getTokenIdByServerId(owner, serverID);
+        burn(tokenId);
     }
 
     // Internal function to remove a token from an owner's list
